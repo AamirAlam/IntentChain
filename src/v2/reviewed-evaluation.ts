@@ -97,9 +97,10 @@ export function validateChallengeReviews(
   return source;
 }
 
-/** Preflight frozen code/model bytes and reviewed targets before any billable annotation calls. */
+/** Validate frozen inputs. Historical-reference mode never authorises running current V2 code. */
 export function loadReviewedChallenge(
   readText: (path: string) => string = (path) => readFileSync(path, 'utf8'),
+  mode: 'current_execution' | 'historical_reference' = 'current_execution',
 ) {
   const rawSource = readText(CHALLENGE_SOURCE);
   const rawReviews = readText(CHALLENGE_REVIEWS);
@@ -120,6 +121,15 @@ export function loadReviewedChallenge(
     throw new Error('Execution snapshot is not bound to the original authoring snapshot.');
   }
   for (const [path, expected] of Object.entries(execution.files)) {
+    // A direct baseline consumes historical evidence, not the historical V2
+    // implementation. Keep model/audit validation strict in both modes.
+    if (
+      mode === 'historical_reference' &&
+      path !== source.model_file &&
+      path !== `${source.model_file}.fit.json`
+    ) {
+      continue;
+    }
     if (hashEvaluationText(readText(path)) !== expected) {
       throw new Error(
         `Frozen execution input changed: ${path}. Record a new research version before scoring.`,
@@ -154,6 +164,7 @@ export function loadReviewedChallenge(
     source,
     coverage,
     model,
+    executionValidation: mode,
     hashes: {
       source: hashEvaluationText(rawSource),
       reviews: hashEvaluationText(rawReviews),

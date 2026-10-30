@@ -23,7 +23,7 @@ const referenceSchema = z.object({
   source_file: z.literal(CHALLENGE_SOURCE),
   source_sha256: z.string(),
   model: z.string(),
-  preflight_hashes: z.object({ model: z.string() }),
+  preflight_hashes: z.object({ model: z.string(), execution: z.string() }),
   coverage: z.object({ selected_case_ids: z.array(z.number().int()) }),
   annotation_calls: z.array(z.unknown()),
   results: z.array(
@@ -49,12 +49,15 @@ type CompletedStep = Exclude<BaselineStep, void>;
 
 /** Validate the V2 reference and shared evidence/model identity before a direct-baseline run. */
 export function prepareDirectBaseline(rawReference: string) {
-  const prepared = loadReviewedChallenge();
+  // This command does not execute V2. Bind to its saved execution snapshot,
+  // while permitting later V2 development without rewriting the old report.
+  const prepared = loadReviewedChallenge(undefined, 'historical_reference');
   const reference = referenceSchema.parse(JSON.parse(rawReference));
   const modelId = process.env.V2_ANNOTATION_MODEL ?? 'gpt-5.6-luna';
   if (
     reference.source_sha256 !== prepared.hashes.source ||
     reference.preflight_hashes.model !== prepared.hashes.model ||
+    reference.preflight_hashes.execution !== prepared.hashes.execution ||
     reference.model !== modelId
   ) {
     throw new Error(
@@ -131,6 +134,7 @@ export async function runDirectBaseline(args: readonly string[]) {
     planned_model_calls: plannedCalls,
     v2_annotation_calls: reference.annotation_calls.length,
     specified_after_V2_results: true,
+    v2_validation: prepared.executionValidation,
     limits: [
       'New direct-model baseline, not the unchanged binary V1 baseline. Prompt specified after observing V2 outputs; this is development comparison, not preregistered independent holdout.',
       'Same supplied evidence and model alias, different call cadence and prompt. Check-result decisions need model calls here; V2 uses deterministic policy code. Not compute- or token-budget matched.',

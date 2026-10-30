@@ -1,12 +1,51 @@
 import { loadFixture, collectSteps } from './fixtures.ts';
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { readFileSync } from 'node:fs';
+import { parseConversationBeliefConfig } from '../conversation-belief.ts';
 import { replayRepositoryEvents } from '../repository-replay.ts';
 import type { RepositoryReplayStep } from '../repository-replay.ts';
 import type { ReplayBeliefConfig } from '../repository-replay.ts';
 import type { ExecutionAnnotation, VisibleMessage } from '../execution-extractor.ts';
 
 const fixture = loadFixture();
+
+test('clearance fix preserves original challenge actions with cached historical annotations', async () => {
+  const challenge = loadFixture('repository-evaluation-v1.json');
+  const model = parseConversationBeliefConfig(
+    JSON.parse(readFileSync('src/v2/config/repository-belief.estimation-v1.json', 'utf8')),
+  );
+  const historical: { results: { evaluation_id: number; step: RepositoryReplayStep }[] } =
+    JSON.parse(readFileSync('results/repository-challenge-2026-10-28T11-26-41-962Z.json', 'utf8'));
+  let checked = 0;
+  for (const scenario of challenge.cases) {
+    const steps = await collectSteps(
+      replayRepositoryEvents(
+        scenario.events,
+        scenario.assessment_artifact!,
+        async (messages) => {
+          const annotation = historical.results.find(
+            (row) =>
+              row.evaluation_id === scenario.evaluation_id &&
+              row.step.event_id === messages.at(-1)!.time,
+          )?.step.annotation;
+          assert.ok(annotation, 'Every recruiter prefix must have a saved annotation.');
+          return annotation;
+        },
+        model,
+      ),
+    );
+    for (const target of scenario.evaluator_only.checkpoints) {
+      assert.equal(
+        steps.find((step) => step.event_id === target.after_event)?.recommendation.action,
+        target.expected_action,
+        `${scenario.evaluation_id} ${target.after_event}`,
+      );
+      checked++;
+    }
+  }
+  assert.equal(checked, 72);
+});
 let calls: VisibleMessage[][] = [];
 const stub = async (messages: readonly VisibleMessage[]): Promise<ExecutionAnnotation> => {
   calls = [...calls, structuredClone([...messages])];
@@ -185,6 +224,43 @@ const exerciseConfig: ReplayBeliefConfig = {
     },
   },
 };
+
+test('later recruiter requests cannot reuse earlier clearance or reauthorise the same replay', async () => {
+  const approved = fixture.cases[0].events;
+  const authorisation = approved[4];
+  assert.equal(authorisation.kind, 'check_result');
+  const events = [
+    ...approved,
+    { event_id: 'e6', kind: 'message', agent_input: { sender: 'candidate', message: 'Thanks.' } },
+    {
+      event_id: 'e7',
+      kind: 'message',
+      agent_input: {
+        sender: 'counterparty',
+        message: 'Please pull revision B and run it locally. Revision B has not been inspected.',
+      },
+    },
+    { ...authorisation, event_id: 'e8', requested_after_event: 'e7' },
+  ];
+  for (const config of [undefined, exerciseConfig]) {
+    const steps = await collectSteps(
+      replayRepositoryEvents(events, fixture.assessment_artifact, stub, config),
+    );
+    assert.equal(steps[4].recommendation.action, 'SAFE');
+    assert.equal(steps[5].recommendation.action, 'SAFE');
+    assert.equal(steps[5].annotation, null);
+    assert.equal(steps[6].recommendation.action, 'HOLD');
+    assert.equal(steps[7].recommendation.action, 'HOLD');
+    assert.equal(steps[7].assessment.assessmentAuthorisation, 'unresolved');
+    assert.match(steps[6].recommendation.reason, /new assessment/);
+    if (config) {
+      assert.equal(
+        steps[6].probabilistic!.belief.scamProbability,
+        steps[4].probabilistic!.belief.scamProbability,
+      );
+    }
+  }
+});
 
 test('configured replay combines sequential beliefs with safety constraints without future or repeated updates', async () => {
   for (const scenario of fixture.cases) {

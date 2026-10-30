@@ -1,0 +1,135 @@
+{
+  "purpose": "synthetic_terminal_decision_cost_comparison",
+  "source_report": "results/repository-challenge-2026-10-28T11-26-41-962Z.json",
+  "report_sha256": "576a64ce672cd7cf797d260b97a67995f150567aab1a653140e1b0298e7df5e0",
+  "source_file": "data/synthesis/repository-evaluation-v1.json",
+  "source_sha256": "156589ac8989b36f973e7531d50a00b925e43416658e391b14c69b0e4a0eb74b",
+  "case_ids": [
+    1001,
+    1002,
+    1003,
+    1004,
+    1005,
+    1006,
+    1007,
+    1008,
+    1009,
+    1010,
+    1011,
+    1012,
+    1013,
+    1014,
+    1015,
+    1016,
+    1017,
+    1018,
+    1019,
+    1020,
+    1021,
+    1022,
+    1023,
+    1024
+  ],
+  "skipped_case_count": 0,
+  "costs": {
+    "SAFE": {
+      "scam": 2,
+      "legitimate": 0
+    },
+    "HOLD": {
+      "scam": 0.5,
+      "legitimate": 0.5
+    },
+    "FLAG": {
+      "scam": 0,
+      "legitimate": 1
+    }
+  },
+  "cost_basis": "Student-assumed relative units; ordinary hiring with HOLD up to 24 hours.",
+  "policies": [
+    {
+      "policy": "P0: always SAFE",
+      "cases": 24,
+      "known": 16,
+      "unknown": 8,
+      "scams": 8,
+      "legitimate": 8,
+      "terminal_decision_cost": 16,
+      "safe_on_scam": 8,
+      "flag_on_legitimate": 0,
+      "hold_known": 0,
+      "hold_unknown": 0,
+      "flag_precision": null,
+      "flag_recall": 0
+    },
+    {
+      "policy": "Always HOLD",
+      "cases": 24,
+      "known": 16,
+      "unknown": 8,
+      "scams": 8,
+      "legitimate": 8,
+      "terminal_decision_cost": 8,
+      "safe_on_scam": 0,
+      "flag_on_legitimate": 0,
+      "hold_known": 16,
+      "hold_unknown": 8,
+      "flag_precision": null,
+      "flag_recall": 0
+    },
+    {
+      "policy": "Always FLAG",
+      "cases": 24,
+      "known": 16,
+      "unknown": 8,
+      "scams": 8,
+      "legitimate": 8,
+      "terminal_decision_cost": 8,
+      "safe_on_scam": 0,
+      "flag_on_legitimate": 8,
+      "hold_known": 0,
+      "hold_unknown": 0,
+      "flag_precision": 0.5,
+      "flag_recall": 1
+    },
+    {
+      "policy": "Cost-only diagnostic",
+      "cases": 24,
+      "known": 16,
+      "unknown": 8,
+      "scams": 8,
+      "legitimate": 8,
+      "terminal_decision_cost": 0,
+      "safe_on_scam": 0,
+      "flag_on_legitimate": 0,
+      "hold_known": 0,
+      "hold_unknown": 0,
+      "flag_precision": 1,
+      "flag_recall": 1
+    },
+    {
+      "policy": "V2 cost + safety",
+      "cases": 24,
+      "known": 16,
+      "unknown": 8,
+      "scams": 8,
+      "legitimate": 8,
+      "terminal_decision_cost": 0,
+      "safe_on_scam": 0,
+      "flag_on_legitimate": 0,
+      "hold_known": 0,
+      "hold_unknown": 8,
+      "flag_precision": 1,
+      "flag_recall": 1
+    }
+  ],
+  "verification_cost": null,
+  "limitations": [
+    "One final decision per case, not cumulative trajectory cost. Intermediate HOLDs and earlier actions are not charged.",
+    "Unknown states are excluded from decision cost and binary precision/recall; their HOLD count is reported separately.",
+    "P0 always SAFE is a fixed no-evidence baseline. The other constant policies are additional references.",
+    "Cost-only reuses the exact V2 observation/belief trajectory; it is a diagnostic without safety overrides, not an independently run evidence-selection policy.",
+    "Verification money/time/attention costs have not been assigned. This is not total operational cost.",
+    "Authored synthetic findings and proposed targets; only the supported subset is scored, not all 100 cases. No claim of held-out calibration or real-world effectiveness."
+  ]
+}

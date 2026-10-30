@@ -1,0 +1,76 @@
+{
+  "purpose": "terminal_cost_bounds_without_imputing_unknown_labels",
+  "source_report": "results/repository-challenge-2026-10-28T11-26-41-962Z.json",
+  "source_report_sha256": "576a64ce672cd7cf797d260b97a67995f150567aab1a653140e1b0298e7df5e0",
+  "unknown_case_ids": [
+    1003,
+    1006,
+    1009,
+    1012,
+    1015,
+    1018,
+    1021,
+    1024
+  ],
+  "costs": {
+    "SAFE": {
+      "scam": 2,
+      "legitimate": 0
+    },
+    "HOLD": {
+      "scam": 0.5,
+      "legitimate": 0.5
+    },
+    "FLAG": {
+      "scam": 0,
+      "legitimate": 1
+    }
+  },
+  "policies": [
+    {
+      "policy": "P0: always SAFE",
+      "known_label_terminal_cost": 16,
+      "unknown_cost_lower_bound": 0,
+      "unknown_cost_upper_bound": 16,
+      "all_case_terminal_cost_lower_bound": 16,
+      "all_case_terminal_cost_upper_bound": 32
+    },
+    {
+      "policy": "Always HOLD",
+      "known_label_terminal_cost": 8,
+      "unknown_cost_lower_bound": 4.0,
+      "unknown_cost_upper_bound": 4.0,
+      "all_case_terminal_cost_lower_bound": 12.0,
+      "all_case_terminal_cost_upper_bound": 12.0
+    },
+    {
+      "policy": "Always FLAG",
+      "known_label_terminal_cost": 8,
+      "unknown_cost_lower_bound": 0,
+      "unknown_cost_upper_bound": 8,
+      "all_case_terminal_cost_lower_bound": 8,
+      "all_case_terminal_cost_upper_bound": 16
+    },
+    {
+      "policy": "Cost-only diagnostic",
+      "known_label_terminal_cost": 0,
+      "unknown_cost_lower_bound": 0,
+      "unknown_cost_upper_bound": 16,
+      "all_case_terminal_cost_lower_bound": 0,
+      "all_case_terminal_cost_upper_bound": 16
+    },
+    {
+      "policy": "V2 cost + safety",
+      "known_label_terminal_cost": 0,
+      "unknown_cost_lower_bound": 4.0,
+      "unknown_cost_upper_bound": 4.0,
+      "all_case_terminal_cost_lower_bound": 4.0,
+      "all_case_terminal_cost_upper_bound": 4.0
+    }
+  ],
+  "limitations": [
+    "Uses the same student-assumed relative costs and one final decision per case. Not dollars, billed costs or observed losses.",
+    "Bounds vary only unknown underlying states, not cost assumptions. No unknown state is relabelled.",
+    "Inspection cost, cumulative delay and information cost remain unassigned."
+  ]
+}

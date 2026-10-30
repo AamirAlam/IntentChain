@@ -1,0 +1,10 @@
+{
+  "purpose": "single_prefix_diagnostic_not_scored_evaluation",
+  "original_failed_run": "results/direct-baseline-2026-10-28T12-24-47-986Z.json",
+  "prompt_sha256": "d31d86a5cc7d39737c958a70819cb0133620bf0f4463f8d0b4942f112ab5696c",
+  "status": "rejected",
+  "failure": {
+    "name": "Error",
+    "message": "Baseline citation must quote an arrived recruiter message or check finding exactly. Event \"e4\"; rejected quote \"no_harmful_behaviour_found\"."
+  }
+}

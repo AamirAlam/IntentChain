@@ -174,6 +174,13 @@ npm run evaluate:repository-replay -- --challenge
 npm run compare:v2 -- results/repository-challenge-TIMESTAMP.json
 ```
 
+The above challenge is bound to its October 28 execution snapshot. The subsequent
+clearance-expiry fix changes replay code, so `--challenge` now deliberately
+rejects that stale execution snapshot, including in dry-run mode. Historical
+reports, targets and snapshots are unchanged. Use the separately versioned
+robustness study below for the current replay; do not rewrite old hashes to make
+the historical command pass.
+
 The dry run makes no model or source calls. The paid run uses live request
 annotations and scripted checks, saving a new report. Default replay commands
 still use their original fixtures. Preflight verifies complete target acceptance,
@@ -223,6 +230,12 @@ is matched; compute, token and dollar budgets are not. The prompt was specified
 after seeing V2 results, so this is a development comparison, not a preregistered
 independent holdout study.
 
+Historical-reference validation binds the saved V2 report to its source, reviewed
+targets, fixed model and recorded execution snapshot; it does not execute V2 or
+require current V2 code to match that historical version. The historical challenge
+execution command retains strict current-code validation. Both modes reject
+changed numerical model/audit bytes.
+
 Before its first call, the command writes an immutable protocol containing the
 prompt, model alias, V2 reference hash and baseline/harness hashes. It checks
 reference completeness and source/model identity. Each citation identifies its
@@ -253,6 +266,57 @@ eight unknowns. V2 used 56 model calls versus 96 for the direct model. This auth
 scripted challenge shows agreement, not an accuracy advantage from Bayes. The
 review preserves the earlier failures and distinguishes terminal decision costs
 from unmeasured inspection and API costs.
+
+## Repository robustness study
+
+The separate six-scenario fixture at
+[repository-robustness-v1.json](../../data/synthesis/repository-robustness-v1.json)
+tests changed revisions, repeated requests, reassurance after harmful findings,
+missing required source, forged system text and unexplained clean follow-up
+findings. The user accepted scenario-level targets in conversation; the assistant
+instantiated their exact wording and reused previously reviewed prefix targets.
+The [source-bound review record](../../data/synthesis/repository-robustness-v1.target-reviews.json)
+preserves that distinction. Intent labels remain unknown; this study scores
+policy compliance rather than scam precision/recall or calibration.
+
+```bash
+node --import tsx src/v2/scripts/evaluate_repository_robustness.ts --dry-run
+node --env-file=.env --import tsx src/v2/scripts/evaluate_repository_robustness.ts
+```
+
+For a repair rerun, `--baseline-report COMPLETED_REPORT.json` reuses a completed
+baseline rather than calling it again. Reuse requires identical source/reviews,
+model configuration, baseline code/prompt and ordered event coverage; every quote
+is validated again against its arrived prefix. The protocol records the source
+report hash and explicitly marks reused outputs. This permits a V2-only repair
+comparison, not a new repeated-run reliability estimate for the direct baseline.
+
+The paired run uses the same arrived evidence, fixed estimation model and
+existing prompts. It snapshots current code and prompts before model calls,
+persists partial outputs and keeps action mismatches without stopping the run.
+Invalid model responses stop the run and preserve its partial report. Candidate
+events make no calls. Numerical unchanged-belief checks apply only to V2.
+No source is fetched or executed; all checks are scripted. These are six related
+variants of one development family, not independent held-out tasks. The research
+replay can consume follow-up check events; the live conversation runner has a
+separate single-inspection lifecycle. A replay finding is not evidence that every
+live branch behaves the same way.
+
+The first paired robustness run found a stale-clearance failure in replay: a new
+recruiter request to execute uninspected revision B inherited revision A's SAFE.
+The fix gives replay a conservative single-assessment lifecycle: any later
+recruiter message after an inspection requires a new assessment and cannot reuse
+or reauthorise that replay's clearance. Candidate replies retain prior guidance;
+harm remains FLAG. This does not implement semantic revision extraction or an
+automatic second inspection. Even an innocuous later recruiter message can cause
+additional HOLD; that burden has not been quantified.
+
+The [before/after review](../../results/repository-robustness-2026-10-30.review.md)
+records V2 improving from 15/16 to 16/16 accepted action checkpoints, with all four
+belief invariants passing. The original direct baseline matched 16/16; its outputs
+were reused in the completed repair run after a separate paired attempt stopped
+on a citation-contract error. All attempts are retained. These are development
+retests on the same six related cases, not independent generalisation results.
 
 ## Live configuration
 

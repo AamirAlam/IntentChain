@@ -59,11 +59,11 @@ function apply(review: unknown, report = source) {
   return applyManualReview(JSON.stringify(review), report, 'original.json');
 }
 
-test('completed source review retains authorisation HOLD and does not create a scam probability', () => {
+test('completed source review permits precautions without creating a scam probability or verifying the sender', () => {
   const review = completedReview();
   const result = apply(review);
   assert.equal(result.assessment.inspection, 'no_harmful_behaviour_found');
-  assert.equal(result.recommendation.action, 'HOLD');
+  assert.equal(result.recommendation.action, 'SAFE');
   assert.equal(result.assessment.assessmentAuthorisation, 'unresolved');
   assert.match(result.belief_update, /not_applied/);
   assert.equal('scamProbability' in result, false);
@@ -206,7 +206,7 @@ test('offline CLI writes a separate assessment and refuses a pending review with
     ];
     const applied = spawnSync(process.execPath, args, { cwd: directory, encoding: 'utf8' });
     assert.equal(applied.status, 0, applied.stderr);
-    assert.match(applied.stdout, /Recommendation: HOLD/);
+    assert.match(applied.stdout, /Recommendation: SAFE/);
     const reports = await readdir(join(directory, 'results'));
     assert.equal(reports.length, 1);
     assert.equal(await readFile(sourcePath, 'utf8'), source);

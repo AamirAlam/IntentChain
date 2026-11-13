@@ -48,14 +48,14 @@ const clean = async (): Promise<Review> => ({
   gaps: [],
 });
 
-test('GitHub cycle pins source and produces scoped clean while retaining authorisation HOLD', async () => {
+test('GitHub cycle pins source and permits scoped precautions without waiting for sender authorisation', async () => {
   const result = await runRepositoryInspection('https://github.com/example/demo.git', 'npm start', {
     fetcher: github('{"scripts":{"start":"echo hello"}}'),
     review: clean,
   });
   assert.equal(result.inspection.outcome, 'no_harmful_behaviour_found');
   assert.equal(result.inspection.scope.artifact_revision, commit);
-  assert.equal(result.recommendation.action, 'HOLD');
+  assert.equal(result.recommendation.action, 'SAFE');
   assert.equal(result.manual_review.candidate, false);
   repositoryEventSchema.parse({
     event_id: 'e2',
@@ -114,7 +114,7 @@ test('provider errors and missing local files stay unresolved while third-party 
   assert.equal(deps.inspection.outcome, 'no_harmful_behaviour_found');
   assert.equal(deps.inspection.scope.inspection_boundary, 'repository_controlled_code');
   assert.match(deps.inspection.limitations, /Third-party.*unverified/);
-  assert.equal(deps.recommendation.action, 'HOLD'); // Authorisation remains independent.
+  assert.equal(deps.recommendation.action, 'SAFE'); // Dependency limitations are disclosed; identity is optional.
   const event = repositoryEventSchema.parse({
     event_id: 'e2',
     kind: 'check_result',

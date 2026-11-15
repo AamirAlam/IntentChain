@@ -89,6 +89,118 @@ const conversation = {
   ],
 };
 
+test('clean current scope proceeds without identity verification, retains benign replies and holds new execution', async () => {
+  const inspected = await cycle();
+  let inspections = 0;
+  let analysedMessages: string[][] = [];
+  const messages = [
+    { time: 't0', sender: 'counterparty', message },
+    { time: 't1', sender: 'candidate', message: 'Thanks, I will review the precautions.' },
+    { time: 't2', sender: 'counterparty', message: 'Thanks for applying.' },
+    { time: 't3', sender: 'counterparty', message: 'Run the updated revision B now.' },
+    { time: 't4', sender: 'candidate', message: 'I will wait for the new review.' },
+    { time: 't5', sender: 'counterparty', message: 'Thanks.' },
+  ];
+  let collected: Array<{
+    action: string;
+    authorisation_status?: string;
+    precautions?: unknown;
+  }> = [];
+  for await (const step of runConversation(
+    { messages },
+    async (prefix) => {
+      analysedMessages = [...analysedMessages, prefix.map((item) => item.time)];
+      const request = prefix.find(
+        (item) => item.sender === 'counterparty' && item.message.startsWith('Run '),
+      );
+      return request
+        ? {
+            status: 'present',
+            first_explicit_request_message: request.time,
+            supporting_message: request.time,
+            quote: request.message,
+            reason: 'Visible request.',
+          }
+        : {
+            status: 'absent_so_far',
+            first_explicit_request_message: null,
+            supporting_message: null,
+            quote: null,
+            reason: 'Acknowledgement without new execution.',
+          };
+    },
+    async () => {
+      inspections++;
+      return inspected;
+    },
+  )) {
+    collected = [...collected, step];
+  }
+  assert.deepEqual(
+    collected.map((step) => step.action),
+    ['HOLD', 'SAFE', 'SAFE', 'SAFE', 'HOLD', 'HOLD', 'HOLD'],
+  );
+  assert.equal(collected[1].authorisation_status, 'not_supplied');
+  assert.ok(Array.isArray(collected[1].precautions));
+  assert.deepEqual(analysedMessages, [['t0'], ['t2'], ['t3']]);
+  assert.equal(inspections, 1);
+});
+
+test('identity-free clearance still requires the inspected artifact, pinned scope and complete coverage', async () => {
+  const inspected = await cycle();
+  const scope = inspected.inspection.scope;
+  assert.ok(scope);
+  const variants: Cycle[] = [
+    {
+      ...inspected,
+      inspection: { ...inspected.inspection, artifact: 'https://github.com/other/repo' },
+    },
+    ...[
+      { ...scope, artifact_revision: 'unresolved' },
+      { ...scope, requested_action: 'another command' },
+      { ...scope, inspected_files: [] },
+      { ...scope, gaps: ['Uninspected local file.'] },
+    ].map((changedScope) => ({
+      ...inspected,
+      inspection: { ...inspected.inspection, scope: changedScope },
+    })),
+  ];
+  for (const variant of variants) {
+    let actions: string[] = [];
+    for await (const step of runConversation(
+      { messages: [conversation.messages[0]] },
+      extract,
+      async () => variant,
+    )) {
+      actions = [...actions, step.action];
+    }
+    assert.deepEqual(actions, ['HOLD', 'HOLD']);
+  }
+});
+
+test('freshly inspected revision does not need to match optional older identity evidence', async () => {
+  const inspected = await cycle();
+  assert.ok(inspected.inspection.scope);
+  const fresh = {
+    ...inspected,
+    inspection: {
+      ...inspected.inspection,
+      scope: { ...inspected.inspection.scope, artifact_revision: 'b'.repeat(40) },
+    },
+  };
+  let final: { action: string; authorisation_status?: string } | undefined;
+  for await (const step of runConversation(
+    { messages: [conversation.messages[0]] },
+    extract,
+    async () => fresh,
+    authorisation(JSON.stringify(inspected)),
+  )) {
+    final = step;
+  }
+  assert.equal(final?.action, 'SAFE');
+  assert.equal(final?.authorisation_status, 'scope_mismatch');
+});
+
 test('bound authorisation permits the inspected request with precautions, then later instructions return to HOLD', async () => {
   const inspected = await cycle();
   let calls = 0;

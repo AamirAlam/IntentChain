@@ -1,4 +1,7 @@
+
 # Recruitment Scam Detection Agent
+
+
 
 **Current version: V2 local preview.** A chat-based assistant that assesses
 recruitment messages and inspects requested repository code before recommending

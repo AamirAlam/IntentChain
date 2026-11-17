@@ -1,5 +1,28 @@
 # V2 agent
 
+Current shipping target: a focused, local repository-assessment preview. Public
+hosting and usage controls are not implemented. Broader evaluation, automatic
+repeat inspections and three-state numerical inference are deferred.
+
+### Scoped study decisions
+
+The numerical research model retains two states: scam and legitimate. Legitimate
+combines genuine recruitment and genuine non-hiring interactions. The existing
+synthetic estimation model uses 8 scam and 55 legitimate cases, excluding three
+unknown cases, for a reference prior of approximately 12.70% scam. Scenarios are
+informed by real conversation patterns; their proportions are not calibrated
+real-world prevalence. No new prior, likelihood or cost values are introduced.
+
+The worked synthetic execution update gives 20% scam probability, followed by
+approximately 4.76% after the modelled scoped-clean result. At 20%, the same
+model gives approximately 0.49 bits of expected inspection information gain.
+Expected remaining decision cost is 0.08 assumed units, excluding checking cost,
+versus 0.5 units for retaining HOLD under the execution safety gate. The resulting
+0.42-unit break-even checking budget is illustrative, not a measured API or
+review cost. Automatic economic check selection is not implemented; the default
+UI remains safety-only. These research assumptions do not establish execution
+permission without the source safety checks below.
+
 ## Local API and UI demo
 
 The demo is isolated in [demo-app](demo-app/README.md): Express transport,
@@ -17,8 +40,36 @@ You play the recruiter by default; use the sender selector to add candidate repl
 Only recruiter messages trigger model analysis or inspection. Candidate replies
 are saved as context for the next recruiter message; the previous assessment
 remains in force. Starter buttons
-fill the composer without sending anything. No verdict is preselected. A clean
-repository can still remain HOLD because assessment authorisation is unresolved.
+fill the composer without sending anything. No verdict is preselected. A completed
+inspection can recommend proceeding with precautions within its pinned repository
+scope; it does not wait for independent company confirmation.
+
+### On-the-go policy — updated 2026-11-04
+
+| Repository assessment | Live guidance |
+| --- | --- |
+| Inspection in progress, unavailable or incomplete | HOLD execution while the source question remains unresolved. |
+| Concrete harmful behaviour found | FLAG; reject the harmful request. |
+| No harmful behaviour found in the completed scope | SAFE with precautions for the inspected revision and command; sender legitimacy remains unverified. |
+
+Independent requester/company confirmation is optional context, rather than a
+mandatory multi-day gate. Public-source inspection remains bounded and read-only.
+Third-party package implementations remain outside the declared inspection scope;
+the assessment is not a whole-installation guarantee. Wallet approvals retain their
+separate HOLD boundary.
+
+Candidate replies make no calls and retain prior guidance. After a completed
+inspection, an ordinary recruiter acknowledgement also retains that scoped guidance.
+New/unclear execution instructions or a failed follow-up annotation require
+reassessment; one inspection is performed per conversation run. Retained guidance
+does not extend to new code, revisions, commands or wallet permissions.
+
+Live inspection, conversation, supplemental-source and manual-review workflows
+explicitly select `on_the_go` in `recommendRepositoryAction`. Its default
+`legacy_authorisation_required` mode preserves the historical research replay and
+its frozen targets. Existing baseline prompts and saved results use that older
+protocol; their metrics do not evaluate the updated live policy. No probability
+or cost assumptions changed with this policy decision.
 
 The chat displays agent responses, SAFE/HOLD/FLAG decisions, exact evidence quotes,
 and expandable inspection details. **Download conversation** exports the messages
@@ -426,8 +477,9 @@ measured losses; urgent hiring requires a separate cost model.
 
 Repository safety constraints can override the cost-only action: concrete harmful
 behaviour requires FLAG, and unresolved execution prevents SAFE. These overrides
-do not numerically change the probability. A clean scoped inspection still needs
-matching verified assessment authorisation before execution can be recommended.
+do not numerically change the probability. Historical research replay requires
+verified assessment authorisation after a clean inspection; the current live
+workflow uses the on-the-go policy described above and treats it as optional context.
 
 **Evidence changes the probability. Costs change the action boundary.**
 

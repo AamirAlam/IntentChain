@@ -35,45 +35,56 @@ function decideInspectedRequest(
   isCurrentRequest: boolean,
   authorisation: ReturnType<typeof applyAssessmentAuthorisation> | undefined,
 ) {
-  if (!authorisation) {
-    return {
-      recommendation:
-        inspection.recommendation.action === 'FLAG'
-          ? inspection.recommendation
-          : recommendRepositoryAction({
-              executionRequested: true,
-              inspection: inspection.inspection.outcome,
-              assessmentAuthorisation: 'unresolved',
-            }),
-      authorisation_status: 'not_supplied',
-    };
-  }
   const scope = inspection.inspection.scope;
-  const binding = authorisation.binding;
+  const binding = authorisation?.binding;
   const matches =
+    binding !== undefined &&
     artifact === binding.artifact &&
     inspection.inspection.artifact === artifact &&
     requestedAction === binding.requested_action &&
     scope?.requested_action === requestedAction &&
     scope.artifact_revision === binding.revision &&
     scope.inspection_boundary === binding.inspection_boundary;
-  const priorHarm = matches && authorisation.inspection.outcome === 'harmful_behaviour_found';
-  const recommendation = recommendRepositoryAction({
-    executionRequested: true,
-    inspection:
-      priorHarm || inspection.recommendation.action === 'FLAG'
+  const priorHarm = matches && authorisation?.inspection.outcome === 'harmful_behaviour_found';
+  // Optional identity evidence cannot replace or weaken artifact/command binding.
+  const currentScope =
+    isCurrentRequest &&
+    artifact === inspection.inspection.artifact &&
+    scope?.requested_action === requestedAction &&
+    scope.inspection_boundary === 'repository_controlled_code' &&
+    /^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(scope.artifact_revision) &&
+    scope.inspected_files.length > 0 &&
+    scope.gaps.length === 0 &&
+    !scope.findings.some((finding) => finding.harmful);
+  const harmful =
+    artifact === inspection.inspection.artifact &&
+    (priorHarm ||
+      inspection.recommendation.action === 'FLAG' ||
+      inspection.inspection.outcome === 'harmful_behaviour_found');
+  const recommendation = recommendRepositoryAction(
+    {
+      executionRequested: true,
+      inspection: harmful
         ? 'harmful_behaviour_found'
-        : inspection.inspection.outcome,
-    assessmentAuthorisation:
-      matches && isCurrentRequest ? authorisation.assessment.assessmentAuthorisation : 'unresolved',
-  });
+        : currentScope
+          ? inspection.inspection.outcome
+          : 'unresolved',
+      assessmentAuthorisation:
+        matches && isCurrentRequest && authorisation
+          ? authorisation.assessment.assessmentAuthorisation
+          : 'unresolved',
+    },
+    'on_the_go',
+  );
   return {
     recommendation,
-    authorisation_status: matches
-      ? isCurrentRequest
-        ? authorisation.assessment.assessmentAuthorisation
-        : 'later_message_requires_reassessment'
-      : 'scope_mismatch',
+    authorisation_status: !authorisation
+      ? 'not_supplied'
+      : matches
+        ? isCurrentRequest
+          ? authorisation.assessment.assessmentAuthorisation
+          : 'later_message_requires_reassessment'
+        : 'scope_mismatch',
   };
 }
 
@@ -169,6 +180,8 @@ async function* runSafetyConversation(
   let walletState = initialWalletApprovalState;
   let walletPending = false;
   let conversationUnresolved = false;
+  let inspectedRecommendation: ReturnType<typeof recommendRepositoryAction> | undefined;
+  let reassessmentPending = false;
   for (let messageIndex = 0; messageIndex < messages.length; messageIndex++) {
     const prefix = messages.slice(0, messageIndex + 1);
     const current = messages[messageIndex];
@@ -214,16 +227,39 @@ async function* runSafetyConversation(
       continue;
     }
     if (flagged || inspected) {
+      let followupAnnotation: ExecutionAnnotation | undefined;
+      if (
+        !flagged &&
+        !reassessmentPending &&
+        inspectedRecommendation?.action === 'SAFE' &&
+        current.sender === 'counterparty'
+      ) {
+        try {
+          // The original prefix still contains the cleared request. Analyse the
+          // arriving message alone to avoid mistaking that old request for a new one.
+          followupAnnotation = validateExecutionAnnotation(await extract([current]), [current]);
+          reassessmentPending = followupAnnotation.status !== 'absent_so_far';
+        } catch {
+          reassessmentPending = true;
+        }
+      }
+      const retained = !reassessmentPending && inspectedRecommendation?.action === 'SAFE';
       yield {
         time: current.time,
         ...(current.sender === 'candidate' ? { candidate_recorded: true } : {}),
         wallet_annotation: walletAnnotation,
-        action: flagged ? 'FLAG' : 'HOLD',
+        ...(followupAnnotation ? { annotation: followupAnnotation } : {}),
+        action: flagged ? 'FLAG' : retained ? 'SAFE' : 'HOLD',
         scope: 'repository_execution',
         inspection_triggered: false,
         reason: flagged
           ? 'Previously identified harmful behaviour remains unresolved.'
-          : 'Execution remains on hold; new instructions require reassessment. Existing inspection is not repeated.',
+          : retained
+            ? 'Prior guidance applies only to the inspected revision and command; this message does not grant permission for changed code or new actions.'
+            : 'Execution remains on hold; new instructions require reassessment. Existing inspection is not repeated.',
+        ...(retained && inspectedRecommendation && 'precautions' in inspectedRecommendation
+          ? { precautions: inspectedRecommendation.precautions }
+          : {}),
       };
       continue;
     }
@@ -315,6 +351,7 @@ async function* runSafetyConversation(
         authorisation,
       );
       flagged = decision.recommendation.action === 'FLAG';
+      inspectedRecommendation = decision.recommendation;
       yield {
         time: current.time,
         wallet_annotation: walletAnnotation,

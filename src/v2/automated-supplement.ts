@@ -161,7 +161,7 @@ export function applyAutomatedSupplement(
     ],
     observations: supplement.observations,
     assessment,
-    recommendation: recommendRepositoryAction(assessment),
+    recommendation: recommendRepositoryAction(assessment, 'on_the_go'),
     human_review_status: 'not_performed',
     belief_update: 'not_applied_no_followup_likelihoods_configured',
   };

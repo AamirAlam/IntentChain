@@ -88,7 +88,7 @@ test('completed authorisation enables precautions only after clean inspection; u
   }
 });
 
-test('unresolved authorisation remains HOLD even with a clean source assessment', () => {
+test('unresolved optional authorisation does not block a clean source assessment', () => {
   const raw = source();
   const record = completed(raw);
   const unresolved = {
@@ -97,8 +97,9 @@ test('unresolved authorisation remains HOLD even with a clean source assessment'
     verification: { ...record.verification, authority_confirmed: false },
   };
   const result = applyAssessmentAuthorisation(JSON.stringify(unresolved), raw, 'fixture.json');
-  assert.equal(result.recommendation.action, 'HOLD');
-  assert.match(result.recommendation.reason, /authorisation remains unresolved/);
+  assert.equal(result.recommendation.action, 'SAFE');
+  assert.equal(result.assessment.assessmentAuthorisation, 'unresolved');
+  assert.match(result.recommendation.reason, /identity and hiring legitimacy are not established/);
 });
 
 test('verified records reject missing confirmations, evidence and invalid verification times', () => {

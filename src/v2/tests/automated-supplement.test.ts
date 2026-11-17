@@ -112,7 +112,7 @@ test('unresolved supplements do not clear named gaps and new gaps remain visible
   assert.ok(result.inspection.scope?.gaps.includes('Dynamic target unresolved.'));
 });
 
-test('harm from either assessment survives and a clean named-file review cannot authorise execution', () => {
+test('harm from either assessment survives a later named-file review', () => {
   for (const harmInOriginal of [true, false]) {
     const { original, supplement } = fixture();
     const file = harmInOriginal ? 'package.json' : 'lib/extra.ts';
@@ -156,7 +156,7 @@ test('harm from either assessment survives and a clean named-file review cannot 
   }
 });
 
-test('resolved file-only coverage still requires separate recruiter authorisation', () => {
+test('resolved source coverage permits precautions while recruiter identity remains unverified', () => {
   const { original, supplement } = fixture();
   const updated = {
     ...original,
@@ -172,6 +172,6 @@ test('resolved file-only coverage still requires separate recruiter authorisatio
   };
   const result = applyAutomatedSupplement(JSON.stringify(linked), raw, 'original.json');
   assert.equal(result.inspection.outcome, 'no_harmful_behaviour_found');
-  assert.equal(result.recommendation.action, 'HOLD');
+  assert.equal(result.recommendation.action, 'SAFE');
   assert.equal(result.assessment.assessmentAuthorisation, 'unresolved');
 });

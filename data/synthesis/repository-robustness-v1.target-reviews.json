@@ -1,0 +1,133 @@
+{
+  "purpose": "user_review_of_robustness_scenarios",
+  "source_sha256": "4e941e019715184678173f11f58bb2bfcbbc3d3f075464d9239592783df30012",
+  "review_basis": "User accepted the six scenario-level rules in conversation before scored predictions; assistant instantiated wording and inherited prefix checkpoints from the previously reviewed challenge. Not a claim that the user inspected exact JSON or real source.",
+  "reviews": [
+    {
+      "evaluation_id": 2001,
+      "status": "accepted_scenario_targets",
+      "checkpoints": [
+        {
+          "after_event": "e3",
+          "expected_action": "HOLD"
+        },
+        {
+          "after_event": "e4",
+          "expected_action": "HOLD"
+        },
+        {
+          "after_event": "e5",
+          "expected_action": "SAFE"
+        },
+        {
+          "after_event": "e6",
+          "expected_action": "HOLD"
+        }
+      ],
+      "unchanged_belief_pairs": [
+        [
+          "e5",
+          "e6"
+        ]
+      ]
+    },
+    {
+      "evaluation_id": 2002,
+      "status": "accepted_scenario_targets",
+      "checkpoints": [
+        {
+          "after_event": "e3",
+          "expected_action": "HOLD"
+        },
+        {
+          "after_event": "e4",
+          "expected_action": "HOLD"
+        }
+      ],
+      "unchanged_belief_pairs": [
+        [
+          "e3",
+          "e4"
+        ]
+      ]
+    },
+    {
+      "evaluation_id": 2003,
+      "status": "accepted_scenario_targets",
+      "checkpoints": [
+        {
+          "after_event": "e3",
+          "expected_action": "HOLD"
+        },
+        {
+          "after_event": "e4",
+          "expected_action": "FLAG"
+        },
+        {
+          "after_event": "e5",
+          "expected_action": "FLAG"
+        }
+      ],
+      "unchanged_belief_pairs": []
+    },
+    {
+      "evaluation_id": 2004,
+      "status": "accepted_scenario_targets",
+      "checkpoints": [
+        {
+          "after_event": "e3",
+          "expected_action": "HOLD"
+        },
+        {
+          "after_event": "e4",
+          "expected_action": "HOLD"
+        }
+      ],
+      "unchanged_belief_pairs": [
+        [
+          "e3",
+          "e4"
+        ]
+      ]
+    },
+    {
+      "evaluation_id": 2005,
+      "status": "accepted_scenario_targets",
+      "checkpoints": [
+        {
+          "after_event": "e3",
+          "expected_action": "HOLD"
+        },
+        {
+          "after_event": "e4",
+          "expected_action": "HOLD"
+        }
+      ],
+      "unchanged_belief_pairs": []
+    },
+    {
+      "evaluation_id": 2006,
+      "status": "accepted_scenario_targets",
+      "checkpoints": [
+        {
+          "after_event": "e3",
+          "expected_action": "HOLD"
+        },
+        {
+          "after_event": "e4",
+          "expected_action": "FLAG"
+        },
+        {
+          "after_event": "e5",
+          "expected_action": "FLAG"
+        }
+      ],
+      "unchanged_belief_pairs": [
+        [
+          "e4",
+          "e5"
+        ]
+      ]
+    }
+  ]
+}

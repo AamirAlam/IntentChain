@@ -131,7 +131,7 @@ export function applyAssessmentAuthorisation(
     verification,
     inspection,
     assessment,
-    recommendation: recommendRepositoryAction(assessment),
+    recommendation: recommendRepositoryAction(assessment, 'on_the_go'),
     belief_update: 'not_applied_no_authorisation_likelihoods_configured',
     limitations:
       'Human-attested evidence; record structure and binding are validated, not reviewer identity or evidence authenticity. No source refresh, execution, dependency verification, dataset relabelling or automatic conversation resume. Changed artifacts and new requests need new checks.',

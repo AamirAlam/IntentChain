@@ -68,10 +68,18 @@ and the active-step motion is disabled with reduced-motion preferences.
   prior calls and reconstructs the existing agent state. It does not implement
   independent scam rules. Candidate replies trigger no model or inspection calls.
 
+The live agent uses the on-the-go repository policy: a completed scoped-clean
+inspection can return SAFE with precautions without waiting for company contacts.
+Unresolved source remains HOLD for execution and concrete harmful findings retain
+FLAG. Sender verification is optional context. Candidate replies and benign
+acknowledgements preserve the inspected scope; new execution instructions need
+reassessment. The demo never executes code or grants wallet permissions.
+
 The existing loopback Host/Origin checks, bounded JSON input, one active analysis,
 eight-session cap, 30-minute expiry, and 20-message chat limit remain. There is no
-public authentication or production deployment in this demo. Agent prompts,
-safety boundaries, probability/cost assumptions and report schemas are unchanged.
+public authentication or production deployment in this demo. Probability/cost
+assumptions and report schemas are unchanged. Historical research replays retain
+their older mandatory-authorisation protocol, separately from this live policy.
 
 Run all core and demo checks with `npm run check:v2`. The relocated demo tests
 are included in `npm run test:v2`; they do not need credentials or live APIs.

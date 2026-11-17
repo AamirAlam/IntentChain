@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "purpose": "repository_conversation_belief",
+  "priorScam": 0.12698412698412698,
+  "executionLikelihoods": {
+    "likelihoodGivenScam": 0.625,
+    "likelihoodGivenLegitimate": 0.36363636363636365
+  },
+  "firstInspectionLikelihoods": {
+    "repository_inspection:unresolved": {
+      "likelihoodGivenScam": 0,
+      "likelihoodGivenLegitimate": 0
+    },
+    "repository_inspection:no_harmful_behaviour_found": {
+      "likelihoodGivenScam": 0.2,
+      "likelihoodGivenLegitimate": 1
+    },
+    "repository_inspection:harmful_behaviour_found": {
+      "likelihoodGivenScam": 0.8,
+      "likelihoodGivenLegitimate": 0
+    }
+  },
+  "provenance": {
+    "kind": "synthetic",
+    "source": "data/synthesis/synthetic-benchmark-100.json; source SHA-256 d33cf10d327a5babb80549c57d9476b5d1e2eae0689b3aedc6210ea6cdad16fb; fixed week2-v2-partition-v1 estimation IDs only. Unsmoothed authored counts, not independent observations.",
+    "limitations": "Retrospective development estimates from stipulated synthetic labels and proposed annotations. Unknown states excluded. No pseudocounts: unobserved outcomes may have zero likelihood in both groups, causing unsupported evidence. First-inspection rates condition on explicit execution and an available scripted inspection. Not deployment prevalence or calibrated probabilities. Costs remain student-assumed; no numerical wallet or authorisation model."
+  }
+}

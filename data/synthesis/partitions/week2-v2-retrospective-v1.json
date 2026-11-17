@@ -1,0 +1,836 @@
+{
+  "schema_version": 1,
+  "purpose": "synthetic_development_group_partition",
+  "source_file": "data/synthesis/synthetic-benchmark-100.json",
+  "source_sha256": "d33cf10d327a5babb80549c57d9476b5d1e2eae0689b3aedc6210ea6cdad16fb",
+  "source_declared_held_out": false,
+  "evaluation_validity": "retrospective_previously_exposed_not_held_out",
+  "seed": "week2-v2-partition-v1",
+  "estimation_group_fraction": 0.7,
+  "assignment_rule": "connected_families_pairs_and_identical_visible_messages_then_seeded_hash_no_label_stratification",
+  "partitions": {
+    "estimation": {
+      "case_ids": [
+        101,
+        107,
+        114,
+        115,
+        116,
+        117,
+        118,
+        120,
+        122,
+        124,
+        125,
+        126,
+        128,
+        130,
+        132,
+        134,
+        136,
+        138,
+        140,
+        142,
+        144,
+        148,
+        150,
+        152,
+        154,
+        164,
+        165,
+        166,
+        168,
+        170,
+        172,
+        173,
+        174,
+        176,
+        178,
+        188,
+        189,
+        190,
+        192,
+        194,
+        204,
+        208,
+        212,
+        213,
+        214,
+        215,
+        216,
+        217,
+        218,
+        219,
+        224,
+        225,
+        226,
+        227,
+        228,
+        229,
+        230,
+        231,
+        232,
+        233,
+        234,
+        235,
+        252,
+        253,
+        254,
+        257
+      ],
+      "group_ids": [
+        "cases:101,107,114,115",
+        "cases:116,117,118,120,122",
+        "cases:124,125,126,128,130",
+        "cases:132,134,136,138",
+        "cases:140,142,144",
+        "cases:148,150,152,154",
+        "cases:164,165,166,168,170",
+        "cases:172,173,174,176,178",
+        "cases:188,189,190,192,194",
+        "cases:204",
+        "cases:208",
+        "cases:212,213,214,215",
+        "cases:216,217,218,219",
+        "cases:224,225,226,227",
+        "cases:228,229,230,231",
+        "cases:232,233,234,235",
+        "cases:252,253,254",
+        "cases:257"
+      ],
+      "label_counts": {
+        "scam": 8,
+        "legitimate": 55,
+        "unknown": 3
+      },
+      "repository_runner": {
+        "supported_case_ids": [
+          101,
+          107,
+          114,
+          115,
+          116,
+          117,
+          118,
+          120,
+          122,
+          124,
+          125,
+          126,
+          128,
+          130,
+          132,
+          134,
+          136,
+          138,
+          140,
+          142,
+          144,
+          148,
+          150,
+          152,
+          154
+        ],
+        "supported_label_counts": {
+          "scam": 4,
+          "legitimate": 20,
+          "unknown": 1
+        },
+        "supported_families": [
+          "container-assessment",
+          "npm-assessment",
+          "original-repository-boundaries",
+          "poc-assessment",
+          "python-assessment",
+          "workspace-assessment"
+        ],
+        "unsupported_case_ids": [
+          164,
+          165,
+          166,
+          168,
+          170,
+          172,
+          173,
+          174,
+          176,
+          178,
+          188,
+          189,
+          190,
+          192,
+          194,
+          204,
+          208,
+          212,
+          213,
+          214,
+          215,
+          216,
+          217,
+          218,
+          219,
+          224,
+          225,
+          226,
+          227,
+          228,
+          229,
+          230,
+          231,
+          232,
+          233,
+          234,
+          235,
+          252,
+          253,
+          254,
+          257
+        ]
+      },
+      "proposed_target_case_ids": [
+        116,
+        117,
+        118,
+        120,
+        122,
+        124,
+        125,
+        126,
+        128,
+        130,
+        132,
+        134,
+        136,
+        138,
+        140,
+        142,
+        144,
+        148,
+        150,
+        152,
+        154,
+        164,
+        165,
+        166,
+        168,
+        170,
+        172,
+        173,
+        174,
+        176,
+        178,
+        188,
+        189,
+        190,
+        192,
+        194,
+        204,
+        208,
+        212,
+        213,
+        214,
+        215,
+        216,
+        217,
+        218,
+        219,
+        224,
+        225,
+        226,
+        227,
+        228,
+        229,
+        230,
+        231,
+        232,
+        233,
+        234,
+        235,
+        252,
+        253,
+        254,
+        257
+      ]
+    },
+    "evaluation": {
+      "case_ids": [
+        156,
+        157,
+        158,
+        160,
+        162,
+        180,
+        181,
+        182,
+        184,
+        186,
+        196,
+        200,
+        220,
+        221,
+        222,
+        223,
+        236,
+        237,
+        238,
+        239,
+        240,
+        241,
+        242,
+        243,
+        244,
+        245,
+        246,
+        247,
+        248,
+        249,
+        250,
+        251,
+        255,
+        256
+      ],
+      "group_ids": [
+        "cases:156,157,158,160,162",
+        "cases:180,181,182,184,186",
+        "cases:196,255,256",
+        "cases:200",
+        "cases:220,221,222,223",
+        "cases:236,237,238,239",
+        "cases:240,241,242,243",
+        "cases:244,245,246,247",
+        "cases:248,249,250,251"
+      ],
+      "label_counts": {
+        "scam": 3,
+        "legitimate": 29,
+        "unknown": 2
+      },
+      "repository_runner": {
+        "supported_case_ids": [
+          196,
+          255,
+          256
+        ],
+        "supported_label_counts": {
+          "scam": 1,
+          "legitimate": 1,
+          "unknown": 1
+        },
+        "supported_families": [
+          "deleted-repository"
+        ],
+        "unsupported_case_ids": [
+          156,
+          157,
+          158,
+          160,
+          162,
+          180,
+          181,
+          182,
+          184,
+          186,
+          200,
+          220,
+          221,
+          222,
+          223,
+          236,
+          237,
+          238,
+          239,
+          240,
+          241,
+          242,
+          243,
+          244,
+          245,
+          246,
+          247,
+          248,
+          249,
+          250,
+          251
+        ]
+      },
+      "proposed_target_case_ids": [
+        156,
+        157,
+        158,
+        160,
+        162,
+        180,
+        181,
+        182,
+        184,
+        186,
+        196,
+        200,
+        220,
+        221,
+        222,
+        223,
+        236,
+        237,
+        238,
+        239,
+        240,
+        241,
+        242,
+        243,
+        244,
+        245,
+        246,
+        247,
+        248,
+        249,
+        250,
+        251,
+        255,
+        256
+      ]
+    }
+  },
+  "groups": [
+    {
+      "group_id": "cases:257",
+      "partition": "estimation",
+      "case_ids": [
+        257
+      ],
+      "family_ids": [
+        "delayed-wallet-approval"
+      ],
+      "partition_groups": [
+        "delayed-wallet-approval"
+      ]
+    },
+    {
+      "group_id": "cases:208",
+      "partition": "estimation",
+      "case_ids": [
+        208
+      ],
+      "family_ids": [
+        "software-source"
+      ],
+      "partition_groups": [
+        "software-source"
+      ]
+    },
+    {
+      "group_id": "cases:228,229,230,231",
+      "partition": "estimation",
+      "case_ids": [
+        228,
+        229,
+        230,
+        231
+      ],
+      "family_ids": [
+        "salary-discussion"
+      ],
+      "partition_groups": [
+        "salary-discussion"
+      ]
+    },
+    {
+      "group_id": "cases:172,173,174,176,178",
+      "partition": "estimation",
+      "case_ids": [
+        172,
+        173,
+        174,
+        176,
+        178
+      ],
+      "family_ids": [
+        "equipment"
+      ],
+      "partition_groups": [
+        "equipment"
+      ]
+    },
+    {
+      "group_id": "cases:116,117,118,120,122",
+      "partition": "estimation",
+      "case_ids": [
+        116,
+        117,
+        118,
+        120,
+        122
+      ],
+      "family_ids": [
+        "npm-assessment"
+      ],
+      "partition_groups": [
+        "npm-assessment"
+      ]
+    },
+    {
+      "group_id": "cases:164,165,166,168,170",
+      "partition": "estimation",
+      "case_ids": [
+        164,
+        165,
+        166,
+        168,
+        170
+      ],
+      "family_ids": [
+        "contact-form"
+      ],
+      "partition_groups": [
+        "contact-form"
+      ]
+    },
+    {
+      "group_id": "cases:188,189,190,192,194",
+      "partition": "estimation",
+      "case_ids": [
+        188,
+        189,
+        190,
+        192,
+        194
+      ],
+      "family_ids": [
+        "identity-form"
+      ],
+      "partition_groups": [
+        "identity-form"
+      ]
+    },
+    {
+      "group_id": "cases:140,142,144",
+      "partition": "estimation",
+      "case_ids": [
+        140,
+        142,
+        144
+      ],
+      "family_ids": [
+        "python-assessment"
+      ],
+      "partition_groups": [
+        "python-assessment"
+      ]
+    },
+    {
+      "group_id": "cases:124,125,126,128,130",
+      "partition": "estimation",
+      "case_ids": [
+        124,
+        125,
+        126,
+        128,
+        130
+      ],
+      "family_ids": [
+        "workspace-assessment"
+      ],
+      "partition_groups": [
+        "workspace-assessment"
+      ]
+    },
+    {
+      "group_id": "cases:252,253,254",
+      "partition": "estimation",
+      "case_ids": [
+        252,
+        253,
+        254
+      ],
+      "family_ids": [
+        "interview-preparation"
+      ],
+      "partition_groups": [
+        "interview-preparation"
+      ]
+    },
+    {
+      "group_id": "cases:224,225,226,227",
+      "partition": "estimation",
+      "case_ids": [
+        224,
+        225,
+        226,
+        227
+      ],
+      "family_ids": [
+        "candidate-outreach"
+      ],
+      "partition_groups": [
+        "candidate-outreach"
+      ]
+    },
+    {
+      "group_id": "cases:148,150,152,154",
+      "partition": "estimation",
+      "case_ids": [
+        148,
+        150,
+        152,
+        154
+      ],
+      "family_ids": [
+        "poc-assessment"
+      ],
+      "partition_groups": [
+        "poc-assessment"
+      ]
+    },
+    {
+      "group_id": "cases:204",
+      "partition": "estimation",
+      "case_ids": [
+        204
+      ],
+      "family_ids": [
+        "profile-unavailable"
+      ],
+      "partition_groups": [
+        "profile-unavailable"
+      ]
+    },
+    {
+      "group_id": "cases:101,107,114,115",
+      "partition": "estimation",
+      "case_ids": [
+        101,
+        107,
+        114,
+        115
+      ],
+      "family_ids": [
+        "original-repository-boundaries"
+      ],
+      "partition_groups": [
+        "original-repository-boundaries"
+      ]
+    },
+    {
+      "group_id": "cases:132,134,136,138",
+      "partition": "estimation",
+      "case_ids": [
+        132,
+        134,
+        136,
+        138
+      ],
+      "family_ids": [
+        "container-assessment"
+      ],
+      "partition_groups": [
+        "container-assessment"
+      ]
+    },
+    {
+      "group_id": "cases:216,217,218,219",
+      "partition": "estimation",
+      "case_ids": [
+        216,
+        217,
+        218,
+        219
+      ],
+      "family_ids": [
+        "resume-request"
+      ],
+      "partition_groups": [
+        "resume-request"
+      ]
+    },
+    {
+      "group_id": "cases:212,213,214,215",
+      "partition": "estimation",
+      "case_ids": [
+        212,
+        213,
+        214,
+        215
+      ],
+      "family_ids": [
+        "initial-role-discussion"
+      ],
+      "partition_groups": [
+        "initial-role-discussion"
+      ]
+    },
+    {
+      "group_id": "cases:232,233,234,235",
+      "partition": "estimation",
+      "case_ids": [
+        232,
+        233,
+        234,
+        235
+      ],
+      "family_ids": [
+        "follow-up-after-delay"
+      ],
+      "partition_groups": [
+        "follow-up-after-delay"
+      ]
+    },
+    {
+      "group_id": "cases:196,255,256",
+      "partition": "evaluation",
+      "case_ids": [
+        196,
+        255,
+        256
+      ],
+      "family_ids": [
+        "deleted-repository"
+      ],
+      "partition_groups": [
+        "deleted-repository"
+      ]
+    },
+    {
+      "group_id": "cases:180,181,182,184,186",
+      "partition": "evaluation",
+      "case_ids": [
+        180,
+        181,
+        182,
+        184,
+        186
+      ],
+      "family_ids": [
+        "wallet"
+      ],
+      "partition_groups": [
+        "wallet"
+      ]
+    },
+    {
+      "group_id": "cases:220,221,222,223",
+      "partition": "evaluation",
+      "case_ids": [
+        220,
+        221,
+        222,
+        223
+      ],
+      "family_ids": [
+        "availability"
+      ],
+      "partition_groups": [
+        "availability"
+      ]
+    },
+    {
+      "group_id": "cases:236,237,238,239",
+      "partition": "evaluation",
+      "case_ids": [
+        236,
+        237,
+        238,
+        239
+      ],
+      "family_ids": [
+        "portfolio-review"
+      ],
+      "partition_groups": [
+        "portfolio-review"
+      ]
+    },
+    {
+      "group_id": "cases:244,245,246,247",
+      "partition": "evaluation",
+      "case_ids": [
+        244,
+        245,
+        246,
+        247
+      ],
+      "family_ids": [
+        "no-current-opening"
+      ],
+      "partition_groups": [
+        "no-current-opening"
+      ]
+    },
+    {
+      "group_id": "cases:156,157,158,160,162",
+      "partition": "evaluation",
+      "case_ids": [
+        156,
+        157,
+        158,
+        160,
+        162
+      ],
+      "family_ids": [
+        "calendar"
+      ],
+      "partition_groups": [
+        "calendar"
+      ]
+    },
+    {
+      "group_id": "cases:200",
+      "partition": "evaluation",
+      "case_ids": [
+        200
+      ],
+      "family_ids": [
+        "unavailable-document"
+      ],
+      "partition_groups": [
+        "unavailable-document"
+      ]
+    },
+    {
+      "group_id": "cases:240,241,242,243",
+      "partition": "evaluation",
+      "case_ids": [
+        240,
+        241,
+        242,
+        243
+      ],
+      "family_ids": [
+        "job-description"
+      ],
+      "partition_groups": [
+        "job-description"
+      ]
+    },
+    {
+      "group_id": "cases:248,249,250,251",
+      "partition": "evaluation",
+      "case_ids": [
+        248,
+        249,
+        250,
+        251
+      ],
+      "family_ids": [
+        "reschedule"
+      ],
+      "partition_groups": [
+        "reschedule"
+      ]
+    }
+  ],
+  "readiness": {
+    "genuinely_held_out": false,
+    "full_evaluation_runner_coverage": false,
+    "repository_evaluation_family_count": 1,
+    "evaluation_targets_awaiting_review": 34,
+    "broad_generalisation_claim_ready": false
+  },
+  "limitations": [
+    "Previously inspected and used for development. Retrospective partitioning does not undo prior exposure or constitute a held-out evaluation.",
+    "Assignment is fixed by the recorded seed and family components, not tuned to label balance or model results.",
+    "Grouping protects declared families/pairs and exact visible-message duplicates; it does not prove semantic independence of authored templates.",
+    "Fit any new model using estimation IDs only. Existing all-100-case synthetic likelihoods contain evaluation-label information and are ineligible for a partition-isolated comparison.",
+    "Unsupported runner cases remain explicit coverage gaps. Unknown states are not binary ground truth. Proposed targets still require review.",
+    "Authored label proportions cannot estimate deployment prevalence or calibrated real-world likelihoods."
+  ]
+}

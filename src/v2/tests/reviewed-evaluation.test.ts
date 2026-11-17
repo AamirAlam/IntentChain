@@ -19,14 +19,15 @@ type Review = {
   accepted_checkpoints: { after_event: string; expected_action: string }[];
 };
 
-test('reviewed challenge preflight validates all 24 targets, 56 recruiter calls and frozen estimation model', () => {
-  const prepared = loadReviewedChallenge();
+test('historical reference validates all 24 targets, 56 recruiter calls and frozen estimation model', () => {
+  const prepared = loadReviewedChallenge(undefined, 'historical_reference');
   assert.equal(prepared.coverage.selected.length, 24);
   assert.equal(prepared.coverage.skipped.length, 0);
   assert.equal(prepared.coverage.plannedMessageCalls, 56);
   assert.equal(prepared.model.priorScam, 8 / 63);
   assert.equal(prepared.hashes.source, hashEvaluationText(rawSource));
   assert.equal(prepared.source.held_out, false);
+  assert.equal(prepared.executionValidation, 'historical_reference');
 });
 
 test('target reviews reject incomplete, duplicate, stale and source-mismatched acceptance', () => {
@@ -77,7 +78,21 @@ test('frozen-code and model tampering fail before any model calls', () => {
   );
 });
 
-test('challenge dry-run makes no model calls and rejects unknown CLI flags', async () => {
-  await runChallenge(['--dry-run']);
+test('historical challenge refuses changed execution code and rejects unknown CLI flags', async () => {
+  await assert.rejects(runChallenge(['--dry-run']), /Frozen execution input changed/);
   await assert.rejects(runChallenge(['--unknown']), /Use --challenge/);
+});
+
+test('historical-reference mode still rejects changed estimation model bytes', () => {
+  assert.throws(
+    () =>
+      loadReviewedChallenge(
+        (path) =>
+          path === 'src/v2/config/repository-belief.estimation-v1.json'
+            ? `${readText(path)}\n`
+            : readText(path),
+        'historical_reference',
+      ),
+    /Frozen execution input changed/,
+  );
 });

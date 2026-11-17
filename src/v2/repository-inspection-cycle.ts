@@ -53,11 +53,14 @@ export async function runRepositoryInspection(
       duration_ms: Date.now() - started,
     };
   }
-  const recommendation = recommendRepositoryAction({
-    executionRequested: true,
-    inspection: inspection.outcome,
-    assessmentAuthorisation: 'unresolved',
-  });
+  const recommendation = recommendRepositoryAction(
+    {
+      executionRequested: true,
+      inspection: inspection.outcome,
+      assessmentAuthorisation: 'unresolved',
+    },
+    'on_the_go',
+  );
   return {
     schema_version: 1,
     created_at: new Date().toISOString(),
@@ -73,8 +76,8 @@ export async function runRepositoryInspection(
       economic_value: 'unknown_no_review_outcome_likelihoods_or_effort_cost_conversion',
       reason:
         inspection.outcome === 'unresolved'
-          ? 'Review could identify harmful behaviour and change HOLD to FLAG; clean review alone cannot resolve authorisation.'
-          : 'Automated inspection returned an outcome; unresolved authorisation is a separate check.',
+          ? 'Review could resolve source gaps and change the execution recommendation to SAFE with precautions or FLAG.'
+          : 'Automated inspection returned an outcome; independent sender verification is optional context.',
     },
     // No source checkout or temporary files exist; only the report is retained.
     source_storage: 'memory_only_no_checkout',

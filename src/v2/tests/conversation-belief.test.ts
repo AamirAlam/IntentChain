@@ -52,7 +52,7 @@ const observation = {
   inspection_triggered: false,
 };
 
-test('live conversation applies execution then conditional inspection likelihoods while preserving authorisation HOLD', async () => {
+test('live conversation combines scoped precautions with costs and holds only new execution after inspection', async () => {
   let inspections = 0;
   let executionCalls = 0;
   const steps = await collectSteps(
@@ -73,8 +73,19 @@ test('live conversation applies execution then conditional inspection likelihood
         const result = await missingInspection(url, action);
         return {
           ...result,
-          inspection: { ...result.inspection, outcome: 'no_harmful_behaviour_found' as const },
-          recommendation: { action: 'HOLD', reason: 'Authorisation unresolved.' },
+          inspection: {
+            ...result.inspection,
+            outcome: 'no_harmful_behaviour_found' as const,
+            scope: {
+              inspection_boundary: 'repository_controlled_code' as const,
+              requested_action: action,
+              artifact_revision: 'a'.repeat(40),
+              inspected_files: ['package.json'],
+              findings: [],
+              gaps: [],
+            },
+          },
+          recommendation: { action: 'SAFE', reason: 'Scoped clean fixture.' },
         };
       },
       undefined,
@@ -90,15 +101,17 @@ test('live conversation applies execution then conditional inspection likelihood
   assert.equal(inspected.entropyBits, calculateBinaryEntropy(1 / 21));
   assert.equal(inspected.lastUpdatedAtEvent, 't0:repository_inspection');
   assert.equal(inspected.decision.costAction, 'SAFE');
-  assert.equal(inspected.decision.action, 'HOLD');
-  assert.equal(inspected.decision.safetyOverride, true);
-  assert.equal(steps[1].action, 'HOLD');
+  assert.equal(inspected.decision.action, 'SAFE');
+  assert.equal(inspected.decision.safetyOverride, false);
+  assert.equal(steps[1].action, 'SAFE');
+  assert.equal(steps[2].action, 'SAFE');
+  assert.equal(steps[3].action, 'HOLD');
   assert.equal(inspected.belief.appliedEvidenceIds.length, 2);
   assert.deepEqual(steps[2].probabilistic?.belief, inspected.belief);
   assert.deepEqual(steps[3].probabilistic?.belief, inspected.belief);
   assert.equal(steps[2].probabilistic?.updateStatus, 'candidate_context_only');
   assert.equal(inspections, 1);
-  assert.equal(executionCalls, 1);
+  assert.equal(executionCalls, 2);
 });
 
 test('unmodelled harmful findings retain FLAG and disclose that the number excludes that evidence', async () => {

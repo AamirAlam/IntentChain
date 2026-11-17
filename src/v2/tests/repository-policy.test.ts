@@ -6,6 +6,28 @@ import type { RepositoryAssessment } from '../repository-policy.ts';
 
 const fixture = loadFixture();
 
+test('on-the-go policy permits scoped clean precautions without a sender-verification wait', () => {
+  const state: RepositoryAssessment = {
+    executionRequested: true,
+    inspection: 'no_harmful_behaviour_found',
+    assessmentAuthorisation: 'unresolved',
+  };
+  const current = recommendRepositoryAction(state, 'on_the_go');
+  assert.equal(current.action, 'SAFE');
+  assert.match(current.reason, /identity and hiring legitimacy are not established/);
+  assert.ok(current.precautions?.some((item) => item.includes('inspected revision and command')));
+  assert.equal(recommendRepositoryAction(state).action, 'HOLD');
+  assert.equal(
+    recommendRepositoryAction({ ...state, inspection: 'unresolved' }, 'on_the_go').action,
+    'HOLD',
+  );
+  assert.equal(
+    recommendRepositoryAction({ ...state, inspection: 'harmful_behaviour_found' }, 'on_the_go')
+      .action,
+    'FLAG',
+  );
+});
+
 test('unresolved scam, legitimate and unknown cases share visible evidence and all HOLD', () => {
   const benchmark = loadFixture('synthetic-benchmark-100.json');
   const scam = benchmark.cases.find((item) => item.evaluation_id === 255)!;

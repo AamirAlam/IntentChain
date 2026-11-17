@@ -208,6 +208,7 @@ export async function* replayRepositoryEvents(
     ? { scamProbability: beliefConfig.priorScam, appliedEvidenceIds: [] }
     : undefined;
   let inspectionSeen = false;
+  let reassessmentRequired = false;
   let inspectionScope: z.infer<typeof inspectionScopeSchema> | undefined;
   let lastUpdatedAtEvent: string | null = null;
   let unmodelledEvidenceEventIds: readonly string[] = [];
@@ -230,6 +231,9 @@ export async function* replayRepositoryEvents(
       const prefix = visibleMessages(messages);
       if (event.agent_input.sender === 'counterparty') {
         annotation = validateExecutionAnnotation(await extract(prefix), prefix);
+        // One assessment per replay, as in the live runner: later messages cannot
+        // inherit clearance for a possibly changed revision, command or scope.
+        reassessmentRequired = reassessmentRequired || inspectionSeen;
       } else {
         updateStatus = 'candidate_context_only';
       }
@@ -268,6 +272,9 @@ export async function* replayRepositoryEvents(
         assessment = { ...assessment, assessmentAuthorisation: input.outcome };
       }
     }
+    if (reassessmentRequired) {
+      assessment = { ...assessment, assessmentAuthorisation: 'unresolved' };
+    }
     seenEvents = new Set([...seenEvents, event.event_id]);
     if (belief) {
       if (updateStatus === 'updated') {
@@ -283,6 +290,7 @@ export async function* replayRepositoryEvents(
       assessment,
       inspectionScope,
       belief ? { belief, updateStatus, lastUpdatedAtEvent, unmodelledEvidenceEventIds } : undefined,
+      reassessmentRequired,
     );
   }
 }
@@ -296,8 +304,13 @@ function buildReplayStep(
     NonNullable<RepositoryReplayStep['probabilistic']>,
     'belief' | 'updateStatus' | 'lastUpdatedAtEvent' | 'unmodelledEvidenceEventIds'
   >,
+  reassessmentRequired = false,
 ): RepositoryReplayStep {
   const repositoryRecommendation = recommendRepositoryAction(assessment);
+  const reassessmentReason =
+    reassessmentRequired && repositoryRecommendation.action === 'HOLD'
+      ? 'Later recruiter messages require a new assessment; earlier clearance is not reused.'
+      : repositoryRecommendation.reason;
   if (!probability) {
     return {
       event_id: eventId,
@@ -306,6 +319,7 @@ function buildReplayStep(
       inspectionScope,
       recommendation: {
         ...repositoryRecommendation,
+        reason: reassessmentReason,
         ...describeActionScope(repositoryRecommendation.action, assessment),
       },
     };
@@ -322,7 +336,7 @@ function buildReplayStep(
       ...describeActionScope(decision.action, assessment),
       reason:
         decision.action === repositoryRecommendation.action
-          ? repositoryRecommendation.reason
+          ? reassessmentReason
           : 'Lowest expected-cost action under the configured belief and ordinary-hiring cost assumptions.',
       ...(decision.action === 'SAFE' && repositoryRecommendation.precautions
         ? { precautions: repositoryRecommendation.precautions }

@@ -153,7 +153,7 @@ export function applyManualReview(rawReview: string, rawSource: string, sourcePa
     reviewed_items: { gaps: review.gap_reviews, findings: review.finding_reviews },
     human_review: review.human_review,
     assessment,
-    recommendation: recommendRepositoryAction(assessment),
+    recommendation: recommendRepositoryAction(assessment, 'on_the_go'),
     prior_harm_preserved: original.automated_outcome === 'harmful_behaviour_found',
     belief_update: 'not_applied_no_manual_review_likelihoods_configured',
     limitations:

@@ -1,0 +1,472 @@
+{
+  "purpose": "paired_repository_robustness_run",
+  "status": "stopped_on_error",
+  "protocol_file": "results/repository-robustness-protocol-2026-10-30T10-10-43-672Z.json",
+  "protocol_sha256": "b440114e6dc690220c32ef9ce7dcf3473ef6fb0316fd9cb310fa2a8fda270f48",
+  "source_file": "data/synthesis/repository-robustness-v1.json",
+  "source_sha256": "4e941e019715184678173f11f58bb2bfcbbc3d3f075464d9239592783df30012",
+  "results": [
+    {
+      "evaluation_id": 2001,
+      "scenario": "changed_revision",
+      "v2": [
+        {
+          "event_id": "e1",
+          "annotation": {
+            "status": "ambiguous",
+            "first_explicit_request_message": null,
+            "supporting_message": "e1",
+            "quote": "a short technical assessment",
+            "reason": "A technical assessment is requested, but the visible message does not clarify whether it requires executing code or installing/running software."
+          },
+          "assessment": {
+            "executionRequested": false,
+            "inspection": "pending",
+            "assessmentAuthorisation": "unresolved"
+          },
+          "recommendation": {
+            "action": "SAFE",
+            "scope": "conversation_only",
+            "guidance": "Continue the conversation only; repository execution has not been authorised.",
+            "reason": "Lowest expected-cost action under the configured belief and ordinary-hiring cost assumptions."
+          },
+          "probabilistic": {
+            "belief": {
+              "scamProbability": 0.12698412698412698,
+              "appliedEvidenceIds": []
+            },
+            "updateStatus": "no_new_evidence",
+            "decision": {
+              "expectedCosts": {
+                "SAFE": 0.25396825396825395,
+                "HOLD": 0.5,
+                "FLAG": 0.873015873015873
+              },
+              "minimumCost": 0.25396825396825395,
+              "optimalActions": [
+                "SAFE"
+              ],
+              "costAction": "SAFE",
+              "action": "SAFE",
+              "safetyOverride": false,
+              "repositoryRecommendation": {
+                "action": null,
+                "reason": "No repository-execution recommendation is required."
+              },
+              "selectedExpectedCost": 0.25396825396825395
+            },
+            "probabilityMeaning": "configured_prior",
+            "lastUpdatedAtEvent": null,
+            "unmodelledEvidenceEventIds": []
+          }
+        },
+        {
+          "event_id": "e2",
+          "annotation": null,
+          "assessment": {
+            "executionRequested": false,
+            "inspection": "pending",
+            "assessmentAuthorisation": "unresolved"
+          },
+          "recommendation": {
+            "action": "SAFE",
+            "scope": "conversation_only",
+            "guidance": "Continue the conversation only; repository execution has not been authorised.",
+            "reason": "Lowest expected-cost action under the configured belief and ordinary-hiring cost assumptions."
+          },
+          "probabilistic": {
+            "belief": {
+              "scamProbability": 0.12698412698412698,
+              "appliedEvidenceIds": []
+            },
+            "updateStatus": "candidate_context_only",
+            "decision": {
+              "expectedCosts": {
+                "SAFE": 0.25396825396825395,
+                "HOLD": 0.5,
+                "FLAG": 0.873015873015873
+              },
+              "minimumCost": 0.25396825396825395,
+              "optimalActions": [
+                "SAFE"
+              ],
+              "costAction": "SAFE",
+              "action": "SAFE",
+              "safetyOverride": false,
+              "repositoryRecommendation": {
+                "action": null,
+                "reason": "No repository-execution recommendation is required."
+              },
+              "selectedExpectedCost": 0.25396825396825395
+            },
+            "probabilityMeaning": "configured_prior",
+            "lastUpdatedAtEvent": null,
+            "unmodelledEvidenceEventIds": []
+          }
+        },
+        {
+          "event_id": "e3",
+          "annotation": {
+            "status": "present",
+            "first_explicit_request_message": "e3",
+            "supporting_message": "e3",
+            "quote": "fetch the assessment repository at https://assessment.example.invalid/rust-build-step/starter and run cargo test",
+            "reason": "The counterparty explicitly asks the candidate to fetch a repository and run a command."
+          },
+          "assessment": {
+            "executionRequested": true,
+            "inspection": "pending",
+            "assessmentAuthorisation": "unresolved"
+          },
+          "recommendation": {
+            "action": "HOLD",
+            "scope": "repository_execution",
+            "guidance": "Do not execute the repository; keep the assessment on hold.",
+            "reason": "Avoid execution while repository inspection is pending or unresolved."
+          },
+          "probabilistic": {
+            "belief": {
+              "scamProbability": 0.19999999999999998,
+              "appliedEvidenceIds": [
+                "conversation:execution-request"
+              ]
+            },
+            "updateStatus": "updated",
+            "decision": {
+              "expectedCosts": {
+                "SAFE": 0.39999999999999997,
+                "HOLD": 0.5,
+                "FLAG": 0.8
+              },
+              "minimumCost": 0.39999999999999997,
+              "optimalActions": [
+                "SAFE"
+              ],
+              "costAction": "SAFE",
+              "action": "HOLD",
+              "safetyOverride": true,
+              "repositoryRecommendation": {
+                "action": "HOLD",
+                "reason": "Avoid execution while repository inspection is pending or unresolved."
+              },
+              "selectedExpectedCost": 0.5
+            },
+            "probabilityMeaning": "posterior_over_modelled_evidence",
+            "lastUpdatedAtEvent": "e3",
+            "unmodelledEvidenceEventIds": []
+          }
+        },
+        {
+          "event_id": "e4",
+          "annotation": null,
+          "assessment": {
+            "executionRequested": true,
+            "inspection": "no_harmful_behaviour_found",
+            "assessmentAuthorisation": "unresolved"
+          },
+          "inspectionScope": {
+            "inspection_boundary": "repository_controlled_code",
+            "requested_action": "Please fetch the assessment repository at https://assessment.example.invalid/rust-build-step/starter and run cargo test before our systems interview.",
+            "artifact_revision": "author-stipulated-snapshot:rust-build-step:v1",
+            "inspected_files": [
+              "Cargo.toml",
+              "build.rs"
+            ],
+            "findings": [
+              {
+                "file": "build.rs",
+                "start_line": 1,
+                "end_line": 1,
+                "behaviour": "The build step generates version metadata within the project; the inspected startup path contains no external secret collection.",
+                "harmful": false
+              }
+            ],
+            "gaps": []
+          },
+          "recommendation": {
+            "action": "HOLD",
+            "scope": "repository_execution",
+            "guidance": "Do not execute the repository; keep the assessment on hold.",
+            "reason": "Assessment authorisation remains unresolved."
+          },
+          "probabilistic": {
+            "belief": {
+              "scamProbability": 0.047619047619047616,
+              "appliedEvidenceIds": [
+                "conversation:execution-request",
+                "repository_inspection:no_harmful_behaviour_found:https://assessment.example.invalid/rust-build-step/starter"
+              ]
+            },
+            "updateStatus": "updated",
+            "decision": {
+              "expectedCosts": {
+                "SAFE": 0.09523809523809523,
+                "HOLD": 0.5,
+                "FLAG": 0.9523809523809523
+              },
+              "minimumCost": 0.09523809523809523,
+              "optimalActions": [
+                "SAFE"
+              ],
+              "costAction": "SAFE",
+              "action": "HOLD",
+              "safetyOverride": true,
+              "repositoryRecommendation": {
+                "action": "HOLD",
+                "reason": "Assessment authorisation remains unresolved."
+              },
+              "selectedExpectedCost": 0.5
+            },
+            "probabilityMeaning": "posterior_over_modelled_evidence",
+            "lastUpdatedAtEvent": "e4",
+            "unmodelledEvidenceEventIds": []
+          }
+        },
+        {
+          "event_id": "e5",
+          "annotation": null,
+          "assessment": {
+            "executionRequested": true,
+            "inspection": "no_harmful_behaviour_found",
+            "assessmentAuthorisation": "verified"
+          },
+          "inspectionScope": {
+            "inspection_boundary": "repository_controlled_code",
+            "requested_action": "Please fetch the assessment repository at https://assessment.example.invalid/rust-build-step/starter and run cargo test before our systems interview.",
+            "artifact_revision": "author-stipulated-snapshot:rust-build-step:v1",
+            "inspected_files": [
+              "Cargo.toml",
+              "build.rs"
+            ],
+            "findings": [
+              {
+                "file": "build.rs",
+                "start_line": 1,
+                "end_line": 1,
+                "behaviour": "The build step generates version metadata within the project; the inspected startup path contains no external secret collection.",
+                "harmful": false
+              }
+            ],
+            "gaps": []
+          },
+          "recommendation": {
+            "action": "SAFE",
+            "scope": "repository_execution",
+            "guidance": "Proceed only with the inspected assessment and stated precautions; reassess new requests.",
+            "reason": "Continue with precautions; inspection found no harmful behaviour within its scope and assessment authorisation is verified.",
+            "precautions": [
+              "Use an appropriately isolated environment without personal credentials or sensitive files.",
+              "Reassess new instructions or changed artifacts not covered by the checks."
+            ]
+          },
+          "probabilistic": {
+            "belief": {
+              "scamProbability": 0.047619047619047616,
+              "appliedEvidenceIds": [
+                "conversation:execution-request",
+                "repository_inspection:no_harmful_behaviour_found:https://assessment.example.invalid/rust-build-step/starter"
+              ]
+            },
+            "updateStatus": "unmodelled_evidence",
+            "decision": {
+              "expectedCosts": {
+                "SAFE": 0.09523809523809523,
+                "HOLD": 0.5,
+                "FLAG": 0.9523809523809523
+              },
+              "minimumCost": 0.09523809523809523,
+              "optimalActions": [
+                "SAFE"
+              ],
+              "costAction": "SAFE",
+              "action": "SAFE",
+              "safetyOverride": false,
+              "repositoryRecommendation": {
+                "action": "SAFE",
+                "reason": "Continue with precautions; inspection found no harmful behaviour within its scope and assessment authorisation is verified.",
+                "precautions": [
+                  "Use an appropriately isolated environment without personal credentials or sensitive files.",
+                  "Reassess new instructions or changed artifacts not covered by the checks."
+                ]
+              },
+              "selectedExpectedCost": 0.09523809523809523
+            },
+            "probabilityMeaning": "posterior_over_modelled_evidence",
+            "lastUpdatedAtEvent": "e4",
+            "unmodelledEvidenceEventIds": [
+              "e5"
+            ]
+          }
+        },
+        {
+          "event_id": "e6",
+          "annotation": {
+            "status": "present",
+            "first_explicit_request_message": "e3",
+            "supporting_message": "e3",
+            "quote": "run cargo test",
+            "reason": "The counterparty explicitly asks the candidate to fetch a repository and run cargo test; this is a request to execute code."
+          },
+          "assessment": {
+            "executionRequested": true,
+            "inspection": "no_harmful_behaviour_found",
+            "assessmentAuthorisation": "unresolved"
+          },
+          "inspectionScope": {
+            "inspection_boundary": "repository_controlled_code",
+            "requested_action": "Please fetch the assessment repository at https://assessment.example.invalid/rust-build-step/starter and run cargo test before our systems interview.",
+            "artifact_revision": "author-stipulated-snapshot:rust-build-step:v1",
+            "inspected_files": [
+              "Cargo.toml",
+              "build.rs"
+            ],
+            "findings": [
+              {
+                "file": "build.rs",
+                "start_line": 1,
+                "end_line": 1,
+                "behaviour": "The build step generates version metadata within the project; the inspected startup path contains no external secret collection.",
+                "harmful": false
+              }
+            ],
+            "gaps": []
+          },
+          "recommendation": {
+            "action": "HOLD",
+            "scope": "repository_execution",
+            "guidance": "Do not execute the repository; keep the assessment on hold.",
+            "reason": "Later recruiter messages require a new assessment; earlier clearance is not reused."
+          },
+          "probabilistic": {
+            "belief": {
+              "scamProbability": 0.047619047619047616,
+              "appliedEvidenceIds": [
+                "conversation:execution-request",
+                "repository_inspection:no_harmful_behaviour_found:https://assessment.example.invalid/rust-build-step/starter"
+              ]
+            },
+            "updateStatus": "duplicate_evidence",
+            "decision": {
+              "expectedCosts": {
+                "SAFE": 0.09523809523809523,
+                "HOLD": 0.5,
+                "FLAG": 0.9523809523809523
+              },
+              "minimumCost": 0.09523809523809523,
+              "optimalActions": [
+                "SAFE"
+              ],
+              "costAction": "SAFE",
+              "action": "HOLD",
+              "safetyOverride": true,
+              "repositoryRecommendation": {
+                "action": "HOLD",
+                "reason": "Assessment authorisation remains unresolved."
+              },
+              "selectedExpectedCost": 0.5
+            },
+            "probabilityMeaning": "posterior_over_modelled_evidence",
+            "lastUpdatedAtEvent": "e4",
+            "unmodelledEvidenceEventIds": [
+              "e5"
+            ]
+          }
+        }
+      ],
+      "direct": [
+        {
+          "event_id": "e1",
+          "candidate_context_only": false,
+          "decision": {
+            "action": "SAFE",
+            "scope": "conversation_only",
+            "reason": "The message introduces a role and assessment but does not request execution yet.",
+            "citations": [
+              {
+                "event_id": "e1",
+                "field": "message",
+                "quote": "We would like to discuss a Rust service role and a short technical assessment."
+              }
+            ]
+          }
+        },
+        {
+          "event_id": "e2",
+          "candidate_context_only": true,
+          "decision": {
+            "action": "SAFE",
+            "scope": "conversation_only",
+            "reason": "The message introduces a role and assessment but does not request execution yet.",
+            "citations": [
+              {
+                "event_id": "e1",
+                "field": "message",
+                "quote": "We would like to discuss a Rust service role and a short technical assessment."
+              }
+            ]
+          }
+        },
+        {
+          "event_id": "e3",
+          "candidate_context_only": false,
+          "decision": {
+            "action": "HOLD",
+            "scope": "repository_execution",
+            "reason": "An execution request to fetch a repository and run tests is established, but it remains unverified.",
+            "citations": [
+              {
+                "event_id": "e3",
+                "field": "message",
+                "quote": "Please fetch the assessment repository at https://assessment.example.invalid/rust-build-step/starter and run cargo test before our systems interview."
+              }
+            ]
+          }
+        }
+      ],
+      "score": null
+    }
+  ],
+  "model_calls": [
+    {
+      "system": "v2",
+      "evaluation_id": 2001,
+      "duration_ms": 3706,
+      "status": "complete"
+    },
+    {
+      "system": "v2",
+      "evaluation_id": 2001,
+      "duration_ms": 3016,
+      "status": "complete"
+    },
+    {
+      "system": "v2",
+      "evaluation_id": 2001,
+      "duration_ms": 3764,
+      "status": "complete"
+    },
+    {
+      "system": "direct",
+      "evaluation_id": 2001,
+      "duration_ms": 2798,
+      "status": "complete"
+    },
+    {
+      "system": "direct",
+      "evaluation_id": 2001,
+      "duration_ms": 3696,
+      "status": "complete"
+    },
+    {
+      "system": "direct",
+      "evaluation_id": 2001,
+      "duration_ms": 2995,
+      "status": "failed"
+    }
+  ],
+  "duration_ms": 19985,
+  "error": {
+    "name": "Error",
+    "message": "Baseline citation must quote an arrived recruiter message, check finding or outcome exactly. Event \"e4\"; rejected quote \"Third-party implementation remains outside scope.\"."
+  }
+}

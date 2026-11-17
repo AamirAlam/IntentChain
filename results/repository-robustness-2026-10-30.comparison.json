@@ -1,0 +1,66 @@
+{
+  "purpose": "robustness_before_after_and_failed_attempts",
+  "runs": [
+    {
+      "report": "results/repository-robustness-2026-10-30T10-01-13-777Z.json",
+      "sha256": "57c4b5b65cd0cecb41bd281520a385d94c3c2ed75dcfd20b1519d1c386097642",
+      "status": "complete",
+      "completed_cases": 6,
+      "checkpoints": 16,
+      "v2_matches": 15,
+      "direct_matches": 16,
+      "belief_invariants": 4,
+      "belief_invariants_passed": 4,
+      "v2_calls": 16,
+      "direct_calls": 22,
+      "baseline_origin": {
+        "mode": "live_in_this_run"
+      },
+      "error": null
+    },
+    {
+      "report": "results/repository-robustness-2026-10-30T10-10-43-673Z.json",
+      "sha256": "7530da6376052ca36651ee6b3aeb62de9efc0b3244c37d398b29d6977088e807",
+      "status": "stopped_on_error",
+      "completed_cases": 0,
+      "checkpoints": 0,
+      "v2_matches": 0,
+      "direct_matches": 0,
+      "belief_invariants": 0,
+      "belief_invariants_passed": 0,
+      "v2_calls": 3,
+      "direct_calls": 3,
+      "baseline_origin": {
+        "mode": "live_in_this_run"
+      },
+      "error": {
+        "name": "Error",
+        "message": "Baseline citation must quote an arrived recruiter message, check finding or outcome exactly. Event \"e4\"; rejected quote \"Third-party implementation remains outside scope.\"."
+      }
+    },
+    {
+      "report": "results/repository-robustness-2026-10-30T10-15-43-681Z.json",
+      "sha256": "2661697f11accd49e4514d2e9b39fc3a284283b74355e3317d4bd4fda3d20e34",
+      "status": "complete",
+      "completed_cases": 6,
+      "checkpoints": 16,
+      "v2_matches": 16,
+      "direct_matches": 16,
+      "belief_invariants": 4,
+      "belief_invariants_passed": 4,
+      "v2_calls": 16,
+      "direct_calls": 0,
+      "baseline_origin": {
+        "mode": "reused_completed_run",
+        "report": "results/repository-robustness-2026-10-30T10-01-13-777Z.json",
+        "sha256": "57c4b5b65cd0cecb41bd281520a385d94c3c2ed75dcfd20b1519d1c386097642"
+      },
+      "error": null
+    }
+  ],
+  "limits": [
+    "All six cases are related authored variants with scripted checks, not independent holdout or real intent labels.",
+    "Final direct baseline results are reused from the first completed run, not new API predictions.",
+    "Counters are wrapper calls including failed calls, not provider retry attempts, token bills or total operational costs."
+  ]
+}

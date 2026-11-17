@@ -484,4 +484,5 @@ workflow uses the on-the-go policy described above and treats it as optional con
 **Evidence changes the probability. Costs change the action boundary.**
 
 For live commands, inspection limits, authorisation workflows, and reports, see
-the [project README](../../README.md).
+the [V2 CLI reference](CLI.md). The [project README](../../README.md) provides
+the demo quick start and a concise V1-to-V2 overview.

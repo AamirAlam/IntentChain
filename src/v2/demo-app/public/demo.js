@@ -238,7 +238,7 @@ function showDecision(step) {
   }
   response.className = `agent-response ${step.action}`;
   const heading = element('div', '', 'response-label');
-  heading.append(element('strong', 'Guardian'), element('small', labels[step.action]));
+  heading.append(element('strong', 'IntentChain'), element('small', labels[step.action]));
   response.replaceChildren(heading, element('p', body));
   byId('verdict').className = `verdict ${step.action}`;
   byId('action-label').textContent =
@@ -427,7 +427,7 @@ byId('download').addEventListener('click', () => {
   );
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'guardian-conversation.json';
+  link.download = 'intentchain-conversation.json';
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });

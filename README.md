@@ -1,5 +1,8 @@
+# IntentChain
 
-# Recruitment Scam Detection Agent
+**Evidence-Grounded Decisions Under Hidden Intent**
+
+Research title: *IntentChain: Sequential Evidence and Risk Assessment in Recruitment Conversations*
 
 
 

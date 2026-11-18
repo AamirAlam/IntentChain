@@ -100,7 +100,7 @@ test('demo streams ordered decisions, strips labels and serves only allowlisted 
   try {
     const page = await fetch(base);
     assert.equal(page.status, 200);
-    assert.match(await page.text(), /Recruitment Guardian/);
+    assert.match(await page.text(), /IntentChain/);
     assert.match(page.headers.get('content-security-policy') ?? '', /script-src 'self'/);
     assert.equal((await fetch(`${base}/.env`)).status, 404);
     assert.equal((await fetch(`${base}/demo.js`)).status, 200);

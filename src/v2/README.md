@@ -19,9 +19,9 @@ model gives approximately 0.49 bits of expected inspection information gain.
 Expected remaining decision cost is 0.08 assumed units, excluding checking cost,
 versus 0.5 units for retaining HOLD under the execution safety gate. The resulting
 0.42-unit break-even checking budget is illustrative, not a measured API or
-review cost. Automatic economic check selection is not implemented; the default
-UI remains safety-only. These research assumptions do not establish execution
-permission without the source safety checks below.
+review cost. The local chat displays these model calculations alongside its
+safety guidance. The model is illustrative and the live policy still controls
+which checks run and what action is recommended.
 
 ## Local API and UI demo
 
@@ -91,8 +91,9 @@ its frozen targets. Existing baseline prompts and saved results use that older
 protocol; their metrics do not evaluate the updated live policy. No probability
 or cost assumptions changed with this policy decision.
 
-The chat displays agent responses, SAFE/HOLD/FLAG decisions, exact evidence quotes,
-and expandable inspection details. **Download conversation** exports the messages
+The chat displays SAFE/HOLD/FLAG guidance in the thread and shows the current
+analysis stage over the composer. The side panel shows model calculations and
+evidence quotes. **Download conversation** exports the messages
 and received events, including partial runs. **New conversation** clears the chat
 and its server context. Results are not automatically written to historical reports.
 The demo detects execution and wallet requests; it is not a general classifier
@@ -149,8 +150,10 @@ the runner; labels and other dataset metadata are stripped.
 - No authorisation upload or manual-review application in the UI. Existing CLI
   workflows remain available. Wallet requests stay HOLD; there is no live
   contract inspection, wallet connection, signing or spending release.
-- No live probability scores, Bayes updates or cost-based decisions in this
-  runner. No third-party dependency audit. SAFE conversation guidance never
+- Chat events include an illustrative `reasoning` panel with prior and posterior
+  distributions, entropy change, expected inspection gain and expected action
+  costs. The panel uses the synthetic estimation model and assumed hiring costs.
+  Live guidance uses the existing safety policy. SAFE conversation guidance never
   authorises executing a repository or granting wallet permissions.
 - Submitted chat messages finish analysis if the page disconnects, preserving
   their server-side state; API charges may still apply. If a stream fails, the

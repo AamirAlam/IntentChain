@@ -23,7 +23,19 @@
         <p>Play the recruiter. Watch how the agent responds.</p>
       </div>
       <span class="live-label"><span aria-hidden="true"></span>Live analysis</span>
-      <button id="new-chat" class="quiet-button">New conversation</button>
+      <div class="navbar-actions">
+        <details id="experiment-menu" class="experiment-menu">
+          <summary aria-label="Recruiter message experiments" title="Recruiter message experiments">
+            <span aria-hidden="true">⚗︎</span>
+          </summary>
+          <div class="experiment-popover">
+            <h2>Recruiter examples</h2>
+            <div id="real-examples" class="real-examples"></div>
+            <p id="example-note">Loading examples…</p>
+          </div>
+        </details>
+        <button id="new-chat" class="quiet-button">New conversation</button>
+      </div>
     </header>
     <main class="app">
       <section class="chat-panel" aria-label="Conversation playground">
@@ -48,18 +60,6 @@
             </div>
           </div>
         </div>
-        <section
-          id="recruiter-suggestions"
-          class="recruiter-suggestions"
-          aria-label="Real recruiter message suggestions"
-        >
-          <div class="suggestion-heading">
-            <h2>Try a real recruiter message</h2>
-            <span>From your LinkedIn collection</span>
-          </div>
-          <div id="real-examples" class="real-examples"></div>
-          <p id="example-note">Loading examples…</p>
-        </section>
         <form id="composer" class="composer">
           <div class="composer-top">
             <label for="sender">Send as</label
@@ -80,89 +80,41 @@
             <span>Enter to send · Shift + Enter for a new line</span
             ><button id="send" type="submit">Send message <span aria-hidden="true">↗</span></button>
           </div>
+          <div id="agent-loading" class="agent-loading" role="status" hidden>
+            <span class="agent-loading-dot" aria-hidden="true"></span>
+            <span id="agent-loading-label"></span>
+          </div>
         </form>
         <p id="status" class="status" role="status">
           Ready when you are. Messages are analysed by the live agent.
         </p>
       </section>
       <aside class="assessment-panel" aria-label="Latest assessment">
-        <div class="assessment-heading">
-          <span class="assessment-icon" aria-hidden="true">◈</span>
-          <h2>The agent’s view</h2>
-        </div>
-        <section id="agent-flow" class="agent-flow" aria-label="Live agent activity" hidden>
-          <div class="flow-heading">
-            <h3>Behind the conversation</h3>
-            <span id="flow-mode">Ready</span>
+        <section id="reasoning-panel" class="reasoning-panel" aria-labelledby="reasoning-title" hidden>
+          <h3 id="reasoning-title">Agent internals</h3>
+          <p class="reasoning-note">Probabilistic thinking and information gains</p>
+          <p id="reasoning-status" role="status">Waiting for the first assessment.</p>
+          <div id="reasoning-values" hidden>
+            <div id="belief-bars"></div>
+            <p class="reasoning-note">Beliefs use the synthetic Week 2 model.</p>
+            <p id="cost-choice" class="reasoning-note" hidden></p>
+            <div class="reasoning-breakdown">
+              <h4>Information gain</h4>
+              <dl class="reasoning-metrics" id="information-metrics"></dl>
+              <h4>Expected cost by action</h4>
+              <p class="reasoning-note">Assumed units</p>
+              <div id="cost-bars"></div>
+            </div>
           </div>
-          <ol class="flow-steps">
-            <li id="flow-message" data-state="pending">
-              <span class="flow-dot" aria-hidden="true"></span>
-              <div>
-                <strong>Receive message</strong
-                ><span id="flow-message-note">Waiting for your next message</span>
-              </div>
-              <small>Waiting</small>
-            </li>
-            <li id="flow-assess" data-state="pending">
-              <span class="flow-dot" aria-hidden="true"></span>
-              <div>
-                <strong>Assess the request</strong
-                ><span id="flow-assess-note">Use the conversation so far</span>
-              </div>
-              <small>Waiting</small>
-            </li>
-            <li id="flow-inspect" data-state="pending">
-              <span class="flow-dot" aria-hidden="true"></span>
-              <div>
-                <strong>Inspect source</strong
-                ><span id="flow-inspect-note">Only when a repository is identified</span>
-              </div>
-              <small>Optional</small>
-            </li>
-            <li id="flow-guide" data-state="pending">
-              <span class="flow-dot" aria-hidden="true"></span>
-              <div>
-                <strong>Return guidance</strong
-                ><span id="flow-guide-note">Explain the action and its scope</span>
-              </div>
-              <small>Waiting</small>
-            </li>
-          </ol>
-          <p id="flow-status" role="status">Activity will appear here when you send a message.</p>
         </section>
-        <div id="verdict" class="verdict neutral">
-          <span id="action-label" class="verdict-label">Awaiting a message</span>
-          <h3 id="verdict-title">Context comes first.</h3>
-          <p id="verdict-body">
-            A code request can be legitimate. A polished introduction can be a scam. The agent looks
-            at the request, not just the wording.
-          </p>
-        </div>
         <section id="evidence-section" class="evidence-section" hidden>
           <h3>What prompted this</h3>
           <blockquote id="evidence"></blockquote>
         </section>
-        <section class="boundaries">
-          <h3>What this demo checks</h3>
-          <ul>
-            <li><span aria-hidden="true">✓</span> Requests to execute code or install software</li>
-            <li><span aria-hidden="true">✓</span> Repository source, read without running it</li>
-            <li><span aria-hidden="true">✓</span> Wallet connections, signatures and approvals</li>
-          </ul>
-          <p>
-            “Continue chatting” is not proof of legitimacy. Other scam types may go undetected. No
-            live probability score is available.
-          </p>
-        </section>
-        <details id="technical-details" class="technical-details">
-          <summary>View decision details</summary>
-          <pre id="details">Send a message to see the source-backed decision.</pre>
-        </details>
         <button id="download" class="download-button" disabled>Download conversation</button>
         <p class="local-note">
-          Local prototype. Messages go to the configured model provider. No code execution, package
-          installation or wallet interaction.
+          Messages go to the configured model provider. The agent reads repository source and checks
+          execution and wallet requests. Conversation guidance alone does not verify the recruiter.
         </p>
       </aside>
     </main>

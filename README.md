@@ -2,7 +2,7 @@
 
 **Evidence-Grounded Decisions Under Hidden Intent**
 
-Research title: *IntentChain: Sequential Evidence and Risk Assessment in Recruitment Conversations*
+Research title: *IntentChain: Sequential Evidence and Risk Assessment in Recruitment Conversations with hidden intent*
 
 
 
@@ -138,11 +138,13 @@ See the [before/after review](results/repository-robustness-2026-10-30.review.md
 | Live Auron repository inspection | HOLD → FLAG from source-cited behaviour; FLAG retained after reassurance |
 | Live public `is-number` inspection | Source fetched; HOLD retained because coverage remained unresolved |
 | Local chat API | Page, candidate-only stream and session reset verified |
-| Complete live scoped-clean clearance | Still unverified on this candidate; covered by local tests |
+| Complete live scoped-clean clearance | Verified on November 19: left-pad inspection returned scoped SAFE; candidate context and a benign acknowledgement retained it, while a changed command returned HOLD |
 
-The live source runs were checked on November 16; release snapshots on
-November 17. The live examples verify integration behaviour, not representative
-scam-detection performance.
+The Auron and is-number runs were checked on November 16; committed release
+snapshots on November 17; the scoped-clean flow on November 19. See the
+[same-input collection repair record](src/v2/demo-app/examples/public-source-smoke.review.json).
+The live examples verify integration behaviour, not representative scam-detection
+performance.
 
 ## Scope and current limits
 

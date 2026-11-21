@@ -58,6 +58,26 @@ Third-party package implementations remain outside the declared inspection scope
 the assessment is not a whole-installation guarantee. Wallet approvals retain their
 separate HOLD boundary.
 
+For repositories with a file listing, a literal `node path.js` command
+(including simple quoted paths and `.mjs`/`.cjs` files) seeds its entry file
+before model review. A literal `npm run name` also resolves the matching
+`package.json` script, its `pre`/`post` lifecycle scripts, and nested `npm run`
+scripts, up to 16 script names. Literal Node entry files in that chain are read
+under the same path, byte, file-count and fetch restrictions. Missing scripts,
+unlisted entries, and over-limit chains remain coverage gaps. This bounded
+collector does not resolve other command-line tools, Node flags, dynamic shell
+expressions or arbitrary shell behavior. It never executes a command or
+establishes safety without source review.
+
+The [public-source smoke](demo-app/examples/public-source-smoke.json) and its
+[before/after record](demo-app/examples/public-source-smoke.review.json) cover
+the November 19 live collection repair for a direct Node command. The same
+input and pinned source went from unresolved coverage to a complete scoped-clean
+result, followed by HOLD for a changed command. npm script-chain collection is
+covered by local fixtures, not a separate live-provider run. These are
+development checks, not a detection-accuracy estimate; earlier
+unsupported-request protections remain in place.
+
 Candidate replies make no calls and retain prior guidance. After a completed
 inspection, an ordinary recruiter acknowledgement also retains that scoped guidance.
 New/unclear execution instructions or a failed follow-up annotation require

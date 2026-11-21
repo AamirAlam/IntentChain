@@ -1,0 +1,100 @@
+{
+  "purpose": "same_input_live_source_collection_development_retest_not_accuracy_estimate",
+  "reports": [
+    {
+      "path": "results/conversation-v2-2026-11-19T12-00-37-809Z.json",
+      "sha256": "ed6b6ecb3739d160457e2f4c7510d0abf0c02f7db003709318b9774903d95c40"
+    },
+    {
+      "path": "results/conversation-v2-2026-11-19T16-37-09-589Z.json",
+      "sha256": "699cd60984aad54e83369c0d3d36fdd5e4dbc27450fe7fcc63ad515c55d50278"
+    }
+  ],
+  "input_sha256": "7b65d46573be046ee1371c16d2a33d65921656e0146e8a52ea159643dc0aa351",
+  "revision": "2fca6157fcca165438e0f9495cf0e5a4e6f71349",
+  "inspection_prompt_sha256": "67e81478365badf5eb54f49c5be35e073fb56fa99ca3e2473456cd9e2154f747",
+  "model_alias": "gpt-5.6-luna",
+  "before": {
+    "outcome": "unresolved",
+    "files": [
+      "README.md",
+      "package.json"
+    ],
+    "model_calls": 4,
+    "actions": [
+      {
+        "time": "t0",
+        "action": "SAFE"
+      },
+      {
+        "time": "t1",
+        "action": "SAFE"
+      },
+      {
+        "time": "t2",
+        "action": "HOLD"
+      },
+      {
+        "time": "t2",
+        "action": "HOLD"
+      },
+      {
+        "time": "t3",
+        "action": "HOLD"
+      },
+      {
+        "time": "t4",
+        "action": "HOLD"
+      },
+      {
+        "time": "t5",
+        "action": "HOLD"
+      }
+    ]
+  },
+  "after": {
+    "outcome": "no_harmful_behaviour_found",
+    "files": [
+      "README.md",
+      "package.json",
+      "index.js"
+    ],
+    "model_calls": 1,
+    "actions": [
+      {
+        "time": "t0",
+        "action": "SAFE"
+      },
+      {
+        "time": "t1",
+        "action": "SAFE"
+      },
+      {
+        "time": "t2",
+        "action": "HOLD"
+      },
+      {
+        "time": "t2",
+        "action": "SAFE"
+      },
+      {
+        "time": "t3",
+        "action": "SAFE"
+      },
+      {
+        "time": "t4",
+        "action": "SAFE"
+      },
+      {
+        "time": "t5",
+        "action": "HOLD"
+      }
+    ]
+  },
+  "limits": [
+    "One known public source development retest, not a representative or held-out benchmark.",
+    "Same configured alias and inspection prompt; resolved provider model version and repeated-run reliability were not measured.",
+    "No repository code executed, packages installed or external executable payloads fetched.",
+    "No independent hiring-intent ground truth. Third-party code remains outside assessment."
+  ]
+}

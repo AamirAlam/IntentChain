@@ -5,6 +5,142 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { inspectRepository } from '../repository-inspector.ts';
 
+test('listed Node entry files are inspected before review even without a manifest reference', async () => {
+  const { inspectSource } = await import('../repository-inspector.ts');
+  const { SourceError } = await import('../repository-source.ts');
+  for (const command of ['node index.js', 'node "./index.js"']) {
+    const entry = 'throw new Error("Fixture source must never execute");';
+    let reads: string[] = [];
+    const result = await inspectSource(
+      {
+        artifact: 'synthetic',
+        revision: 'fixture',
+        availableFiles: ['package.json', 'index.js'],
+        async readFile(path) {
+          reads = [...reads, path];
+          if (path === 'package.json') {
+            return '{}';
+          }
+          if (path === 'index.js') {
+            return entry;
+          }
+          throw new SourceError('not_found');
+        },
+      },
+      command,
+      async (input) => {
+        assert.equal(input.files.find((file) => file.file === 'index.js')?.text, entry);
+        return { coverage_complete: true, requested_files: [], findings: [], gaps: [] };
+      },
+    );
+    assert.equal(result.outcome, 'no_harmful_behaviour_found');
+    assert.equal(reads.filter((path) => path === 'index.js').length, 1);
+    assert.ok(result.scope.inspected_files.includes('index.js'));
+  }
+});
+
+test('missing or excluded requested Node entries cannot produce clean coverage', async () => {
+  const { inspectSource } = await import('../repository-inspector.ts');
+  const { SourceError } = await import('../repository-source.ts');
+  const scenarios = [
+    { path: 'missing.js', listed: false, mayRead: false },
+    { path: 'missing.js', listed: true, mayRead: true },
+    { path: '.env.js', listed: true, mayRead: false },
+    { path: '../secret.js', listed: true, mayRead: false },
+  ];
+  for (const scenario of scenarios) {
+    let reads: string[] = [];
+    const result = await inspectSource(
+      {
+        artifact: 'synthetic',
+        revision: 'fixture',
+        availableFiles: ['package.json', ...(scenario.listed ? [scenario.path] : [])],
+        async readFile(path) {
+          reads = [...reads, path];
+          if (path === 'package.json') {
+            return '{}';
+          }
+          throw new SourceError('not_found');
+        },
+      },
+      `node ${scenario.path}`,
+      async () => ({ coverage_complete: true, requested_files: [], findings: [], gaps: [] }),
+    );
+    assert.equal(result.outcome, 'unresolved');
+    assert.ok(result.scope.gaps.length > 0);
+    assert.equal(reads.includes(scenario.path), scenario.mayRead);
+  }
+});
+
+test('npm run inspection resolves bounded script chains and lifecycle entries', async () => {
+  const { inspectSource } = await import('../repository-inspector.ts');
+  const { SourceError } = await import('../repository-source.ts');
+  const packageJson = JSON.stringify({
+    scripts: {
+      predev: 'node prepare.js',
+      dev: 'npm run serve',
+      postdev: 'node cleanup.js',
+      preserve: 'node pre-serve.js',
+      serve: 'node server.js',
+    },
+  });
+  const entries = ['prepare.js', 'pre-serve.js', 'server.js', 'cleanup.js'];
+  const result = await inspectSource(
+    {
+      artifact: 'synthetic',
+      revision: 'fixture',
+      availableFiles: ['package.json', ...entries],
+      async readFile(path) {
+        if (path === 'package.json') {
+          return packageJson;
+        }
+        if (entries.includes(path)) {
+          return `// inspected only: ${path}`;
+        }
+        throw new SourceError('not_found');
+      },
+    },
+    'Please run npm run dev.',
+    async (input) => {
+      assert.deepEqual(
+        input.files
+          .map((file) => file.file)
+          .filter((path) => entries.includes(path))
+          .toSorted(),
+        entries.toSorted(),
+      );
+      return { coverage_complete: true, requested_files: [], findings: [], gaps: [] };
+    },
+  );
+  assert.equal(result.outcome, 'no_harmful_behaviour_found');
+  assert.deepEqual(
+    result.scope.inspected_files.filter((path) => entries.includes(path)).toSorted(),
+    entries.toSorted(),
+  );
+});
+
+test('npm script entry gaps prevent clean coverage', async () => {
+  const { inspectSource } = await import('../repository-inspector.ts');
+  const { SourceError } = await import('../repository-source.ts');
+  const result = await inspectSource(
+    {
+      artifact: 'synthetic',
+      revision: 'fixture',
+      availableFiles: ['package.json'],
+      async readFile(path) {
+        if (path === 'package.json') {
+          return JSON.stringify({ scripts: { dev: 'node missing.js' } });
+        }
+        throw new SourceError('not_found');
+      },
+    },
+    'Run npm run dev.',
+    async () => ({ coverage_complete: true, requested_files: [], findings: [], gaps: [] }),
+  );
+  assert.equal(result.outcome, 'unresolved');
+  assert.ok(result.scope.gaps.some((gap) => gap.includes('not listed for inspection: missing.js')));
+});
+
 test('read-only inspection follows local references, refuses escapes, and preserves proposed evidence', async () => {
   const root = await mkdtemp(join(tmpdir(), 'v2-inspection-'));
   try {

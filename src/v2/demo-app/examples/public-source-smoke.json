@@ -1,0 +1,36 @@
+{
+  "origin": "synthetic",
+  "purpose": "Bounded live integration smoke using a minimal public repository. No recruitment-intent ground truth or expected verdict is supplied. Inspect current source; never execute the requested commands.",
+  "messages": [
+    {
+      "time": "t0",
+      "sender": "recruiter",
+      "message": "Are you available to discuss a JavaScript role?"
+    },
+    {
+      "time": "t1",
+      "sender": "candidate",
+      "message": "Yes, please share the assessment."
+    },
+    {
+      "time": "t2",
+      "sender": "recruiter",
+      "message": "Please run node index.js in https://github.com/left-pad/left-pad and explain what this assessment program does."
+    },
+    {
+      "time": "t3",
+      "sender": "candidate",
+      "message": "I will read the assessment and precautions first."
+    },
+    {
+      "time": "t4",
+      "sender": "recruiter",
+      "message": "Thanks for your time."
+    },
+    {
+      "time": "t5",
+      "sender": "recruiter",
+      "message": "Now pull the latest revision and run npm test instead in https://github.com/left-pad/left-pad."
+    }
+  ]
+}

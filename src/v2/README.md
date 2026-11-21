@@ -19,9 +19,9 @@ model gives approximately 0.49 bits of expected inspection information gain.
 Expected remaining decision cost is 0.08 assumed units, excluding checking cost,
 versus 0.5 units for retaining HOLD under the execution safety gate. The resulting
 0.42-unit break-even checking budget is illustrative, not a measured API or
-review cost. Automatic economic check selection is not implemented; the default
-UI remains safety-only. These research assumptions do not establish execution
-permission without the source safety checks below.
+review cost. The local chat displays these model calculations alongside its
+safety guidance. The model is illustrative and the live policy still controls
+which checks run and what action is recommended.
 
 ## Local API and UI demo
 
@@ -58,6 +58,26 @@ Third-party package implementations remain outside the declared inspection scope
 the assessment is not a whole-installation guarantee. Wallet approvals retain their
 separate HOLD boundary.
 
+For repositories with a file listing, a literal `node path.js` command
+(including simple quoted paths and `.mjs`/`.cjs` files) seeds its entry file
+before model review. A literal `npm run name` also resolves the matching
+`package.json` script, its `pre`/`post` lifecycle scripts, and nested `npm run`
+scripts, up to 16 script names. Literal Node entry files in that chain are read
+under the same path, byte, file-count and fetch restrictions. Missing scripts,
+unlisted entries, and over-limit chains remain coverage gaps. This bounded
+collector does not resolve other command-line tools, Node flags, dynamic shell
+expressions or arbitrary shell behavior. It never executes a command or
+establishes safety without source review.
+
+The [public-source smoke](demo-app/examples/public-source-smoke.json) and its
+[before/after record](demo-app/examples/public-source-smoke.review.json) cover
+the November 19 live collection repair for a direct Node command. The same
+input and pinned source went from unresolved coverage to a complete scoped-clean
+result, followed by HOLD for a changed command. npm script-chain collection is
+covered by local fixtures, not a separate live-provider run. These are
+development checks, not a detection-accuracy estimate; earlier
+unsupported-request protections remain in place.
+
 Candidate replies make no calls and retain prior guidance. After a completed
 inspection, an ordinary recruiter acknowledgement also retains that scoped guidance.
 New/unclear execution instructions or a failed follow-up annotation require
@@ -71,8 +91,9 @@ its frozen targets. Existing baseline prompts and saved results use that older
 protocol; their metrics do not evaluate the updated live policy. No probability
 or cost assumptions changed with this policy decision.
 
-The chat displays agent responses, SAFE/HOLD/FLAG decisions, exact evidence quotes,
-and expandable inspection details. **Download conversation** exports the messages
+The chat displays SAFE/HOLD/FLAG guidance in the thread and shows the current
+analysis stage over the composer. The side panel shows model calculations and
+evidence quotes. **Download conversation** exports the messages
 and received events, including partial runs. **New conversation** clears the chat
 and its server context. Results are not automatically written to historical reports.
 The demo detects execution and wallet requests; it is not a general classifier
@@ -129,8 +150,10 @@ the runner; labels and other dataset metadata are stripped.
 - No authorisation upload or manual-review application in the UI. Existing CLI
   workflows remain available. Wallet requests stay HOLD; there is no live
   contract inspection, wallet connection, signing or spending release.
-- No live probability scores, Bayes updates or cost-based decisions in this
-  runner. No third-party dependency audit. SAFE conversation guidance never
+- Chat events include an illustrative `reasoning` panel with prior and posterior
+  distributions, entropy change, expected inspection gain and expected action
+  costs. The panel uses the synthetic estimation model and assumed hiring costs.
+  Live guidance uses the existing safety policy. SAFE conversation guidance never
   authorises executing a repository or granting wallet permissions.
 - Submitted chat messages finish analysis if the page disconnects, preserving
   their server-side state; API charges may still apply. If a stream fails, the

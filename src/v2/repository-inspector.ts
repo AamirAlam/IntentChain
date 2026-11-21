@@ -227,6 +227,113 @@ const INITIAL_PATHS = [
   'Dockerfile',
 ];
 
+const MAX_NPM_SCRIPT_HOPS = 16;
+
+function requestedNodeEntries(requestedAction: string): string[] {
+  // Bounded literal matching only: do not interpret flags, substitutions or shell code.
+  const commands = requestedAction.matchAll(
+    /(?:^|[\s;&|])node[ \t]+(?:"([^"\r\n]+)"|'([^'\r\n]+)'|([^\s;&|<>"'`]+))/g,
+  );
+  return [
+    ...new Set(
+      [...commands]
+        .map((match) => match[1] ?? match[2] ?? match[3])
+        .filter((path) => /^[A-Za-z0-9_./-]+\.[cm]?js$/.test(path))
+        .map((path) => (path.startsWith('./') ? path.slice(2) : path)),
+    ),
+  ];
+}
+
+function requestedNpmScripts(requestedAction: string): string[] {
+  const commands = requestedAction.matchAll(/(?:^|[\s;&|])npm[ \t]+run[ \t]+([A-Za-z0-9:_-]+)/g);
+  return [...new Set([...commands].map((match) => match[1]))];
+}
+
+function resolveNpmScriptEntries(
+  packageText: string | undefined,
+  requestedAction: string,
+  availableFiles: readonly string[] | undefined,
+): { entries: string[]; gaps: string[] } {
+  const requestedScripts = requestedNpmScripts(requestedAction);
+  if (!requestedScripts.length) {
+    return { entries: [], gaps: [] };
+  }
+  if (!packageText) {
+    return { entries: [], gaps: ['Cannot resolve requested npm scripts without package.json.'] };
+  }
+
+  let parsedPackage: unknown;
+  try {
+    parsedPackage = JSON.parse(packageText);
+  } catch {
+    return {
+      entries: [],
+      gaps: ['Cannot resolve requested npm scripts: package.json is invalid.'],
+    };
+  }
+  const manifest = z.object({ scripts: z.record(z.string(), z.string()) }).safeParse(parsedPackage);
+  if (!manifest.success) {
+    return {
+      entries: [],
+      gaps: ['Cannot resolve requested npm scripts: package.json has no valid scripts object.'],
+    };
+  }
+
+  const visitScripts = (
+    queue: readonly string[],
+    visited: readonly string[] = [],
+    entries: readonly string[] = [],
+    gaps: readonly string[] = [],
+  ): { entries: string[]; gaps: string[] } => {
+    const [name, ...remaining] = queue;
+    if (!name) {
+      return { entries: [...entries], gaps: [...gaps] };
+    }
+    if (visited.includes(name)) {
+      return visitScripts(remaining, visited, entries, gaps);
+    }
+    if (visited.length >= MAX_NPM_SCRIPT_HOPS) {
+      return {
+        entries: [...entries],
+        gaps: [
+          ...gaps,
+          `Npm script chain exceeds the ${MAX_NPM_SCRIPT_HOPS}-script inspection limit.`,
+        ],
+      };
+    }
+    if (!Object.hasOwn(manifest.data.scripts, name)) {
+      return visitScripts(remaining, [...visited, name], entries, [
+        ...gaps,
+        `Requested npm script is not defined: ${name}.`,
+      ]);
+    }
+
+    const commands = [`pre${name}`, name, `post${name}`]
+      .filter((scriptName) => Object.hasOwn(manifest.data.scripts, scriptName))
+      .map((scriptName) => manifest.data.scripts[scriptName]);
+    return visitScripts(
+      [...remaining, ...commands.flatMap(requestedNpmScripts)],
+      [...visited, name],
+      [...entries, ...commands.flatMap(requestedNodeEntries)],
+      gaps,
+    );
+  };
+  const resolved = visitScripts(requestedScripts);
+  const uniqueEntries = [...new Set(resolved.entries)];
+  const gaps = [
+    ...resolved.gaps,
+    ...(availableFiles
+      ? uniqueEntries
+          .filter((path) => !availableFiles.includes(path))
+          .map((path) => `Requested npm script entry is not listed for inspection: ${path}.`)
+      : []),
+  ];
+  return {
+    entries: uniqueEntries.filter((path) => !availableFiles || availableFiles.includes(path)),
+    gaps,
+  };
+}
+
 type SourceFailure = { file: string; code: string; retry_at: string | null };
 type CitationAdjustment = {
   file: string;
@@ -471,13 +578,18 @@ export async function inspectSource(
     throw new Error('Requested action is required.');
   }
   const started = Date.now();
+  const nodeEntries = requestedNodeEntries(requestedAction);
   let collected: CollectedSource = {
     files: [],
     unavailable: [],
     sourceErrors: [],
     attempted: [],
     failures: new Map(),
-    machineGaps: [],
+    machineGaps: source.availableFiles
+      ? nodeEntries
+          .filter((path) => !source.availableFiles?.includes(path))
+          .map((path) => `Requested Node entry is not listed for inspection: ${path}.`)
+      : [],
     bytes: 0,
   };
   let modelCalls = 0;
@@ -501,6 +613,27 @@ export async function inspectSource(
   };
   for (let round = 0; round < MAX_REVIEW_ROUNDS; round++) {
     collected = await collectSourceFiles(source, collected, pending, round);
+    if (round === 0) {
+      // Explicit commands and resolved npm scripts supply required entry references.
+      // Missing entry files remain gaps rather than optional-seed absences.
+      const packageText = collected.files.find((file) => file.file === 'package.json')?.text;
+      const npmScripts = resolveNpmScriptEntries(
+        packageText,
+        requestedAction,
+        source.availableFiles,
+      );
+      collected = {
+        ...collected,
+        machineGaps: [...collected.machineGaps, ...npmScripts.gaps],
+      };
+      const requiredEntries = [
+        ...nodeEntries.filter(
+          (path) => !source.availableFiles || source.availableFiles.includes(path),
+        ),
+        ...npmScripts.entries,
+      ];
+      collected = await collectSourceFiles(source, collected, [...new Set(requiredEntries)], 1);
+    }
     // Batch discoverable local import layers before spending another model call.
     for (let layer = 0; layer < MAX_INSPECTED_PATHS; layer++) {
       const imports = discoverLocalImports(collected.files, source.availableFiles ?? [])

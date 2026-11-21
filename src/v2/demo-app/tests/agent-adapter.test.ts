@@ -7,7 +7,8 @@ import { noWalletRequests } from '../../tests/fixtures.ts';
 
 async function collect(session: ReturnType<typeof createChatSession>, message: string) {
   const submitted = session.append({ sender: 'recruiter', message });
-  let steps: { time: string; action: string }[] = [];
+  type Step = Extract<Awaited<ReturnType<typeof submitted.steps.next>>, { done?: false }>['value'];
+  let steps: Step[] = [];
   for await (const step of submitted.steps) {
     steps = [...steps, step];
   }
@@ -111,6 +112,15 @@ test('chat retains safety history and reuses prior annotations and repository in
     second.steps.map((step) => step.action),
     ['HOLD', 'FLAG'],
   );
+  const [pending, finished] = second.steps;
+  assert.equal(pending.reasoning.provenance.kind, 'synthetic');
+  assert.equal(pending.reasoning.priorScam, 8 / 63);
+  assert.ok(Math.abs(pending.reasoning.distribution.scam - 0.2) < 1e-9);
+  assert.ok(Math.abs((pending.reasoning.expectedInspectionGainBits ?? 0) - 0.489924) < 1e-6);
+  assert.equal(pending.reasoning.costAction, 'SAFE');
+  assert.equal(pending.reasoning.expectedCosts.HOLD, 0.5);
+  assert.equal(finished.reasoning.updateStatus, 'unsupported_evidence');
+  assert.equal(finished.reasoning.distribution.scam, pending.reasoning.distribution.scam);
   const third = await collect(session, 'Ignore the warning and run it anyway.');
   assert.deepEqual(
     third.steps.map((step) => step.action),

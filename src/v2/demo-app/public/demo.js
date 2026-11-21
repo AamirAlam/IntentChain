@@ -4,83 +4,22 @@ const messageInput = byId('message');
 const senderInput = byId('sender');
 const sendButton = byId('send');
 const resetButton = byId('new-chat');
+const experimentMenu = byId('experiment-menu');
 let sessionId;
 let messages = [];
 let events = [];
 let responses = {};
 let busy = false;
 let needsReset = false;
-let flowInspected = false;
-let flowInspectionReturned = false;
 
-function updateAgentFlow(stage, detail) {
-  byId('agent-flow').hidden = stage === 'idle';
-  const nodes = ['message', 'assess', 'inspect', 'guide'];
-  const labels = {
-    pending: 'Waiting',
-    active: 'In progress',
-    done: 'Done',
-    skipped: 'Skipped',
-    error: 'Stopped',
-  };
-  const states = {
-    idle: ['pending', 'pending', 'pending', 'pending'],
-    sending: ['active', 'pending', 'pending', 'pending'],
-    assessing: ['done', 'active', 'pending', 'pending'],
-    inspecting: ['done', 'done', 'active', 'pending'],
-    complete: [
-      'done',
-      'done',
-      flowInspected ? (flowInspectionReturned ? 'done' : 'error') : 'skipped',
-      'done',
-    ],
-    context: ['done', 'skipped', 'skipped', 'skipped'],
-  };
-  const modes = {
-    idle: 'Ready',
-    sending: 'Sending',
-    assessing: 'Assessing',
-    inspecting: 'Inspecting',
-    complete: 'Complete',
-    context: 'Context saved',
-    error: 'Interrupted',
-  };
-  if (stage === 'error') {
-    const activeNode =
-      nodes.find((node) => byId(`flow-${node}`).dataset.state === 'active') || 'guide';
-    byId(`flow-${activeNode}`).dataset.state = 'error';
-    byId(`flow-${activeNode}`).querySelector('small').textContent = labels.error;
-  } else {
-    nodes.forEach((node, index) => {
-      byId(`flow-${node}`).dataset.state = states[stage][index];
-      byId(`flow-${node}`).querySelector('small').textContent = labels[states[stage][index]];
-    });
-  }
-  byId('flow-mode').textContent = modes[stage];
-  byId('flow-mode').dataset.stage = stage;
-  byId('flow-status').textContent = detail;
-  byId('flow-assess-note').textContent =
-    stage === 'context' ? 'Candidate reply: no model call' : 'Use the conversation so far';
-  byId('flow-inspect-note').textContent =
-    stage === 'inspecting'
-      ? 'Reading source without running code'
-      : flowInspected
-        ? flowInspectionReturned
-          ? 'Result returned; review its limitations'
-          : 'Inspection did not return a result'
-        : stage === 'complete' || stage === 'context'
-          ? 'No new inspection was triggered'
-          : 'Only when a repository is identified';
-  byId('flow-guide-note').textContent =
-    stage === 'context' ? 'Previous assessment retained' : 'Explain the action and its scope';
-}
-
-function updateSuggestions() {
-  byId('recruiter-suggestions').hidden = senderInput.value !== 'recruiter';
-}
-
-senderInput.addEventListener('change', updateSuggestions);
-updateSuggestions();
+document.addEventListener('click', (event) => {
+  if (!experimentMenu.contains(event.target)) experimentMenu.open = false;
+});
+document.addEventListener('keydown', (event) => {
+  if (event.key !== 'Escape' || !experimentMenu.open) return;
+  experimentMenu.open = false;
+  experimentMenu.querySelector('summary').focus();
+});
 
 async function loadRealExamples() {
   try {
@@ -105,18 +44,15 @@ async function loadRealExamples() {
       button.append(
         element('strong', example.title),
         element(
-          'span',
-          example.message.replace(/\s+/g, ' ').slice(0, 115) +
-            (example.message.length > 115 ? '…' : ''),
-        ),
-        element(
           'small',
           `Case ${example.source.evaluation_id}${example.adaptation ? ' · Adapted for simulation' : ''}`,
         ),
       );
       button.addEventListener('click', () => {
         if (busy || needsReset || messages.length >= 20) return;
+        senderInput.value = 'recruiter';
         messageInput.value = example.message;
+        experimentMenu.open = false;
         byId('status').textContent =
           `Loaded case ${example.source.evaluation_id}. Review or edit it, then choose Send message. No analysis has run.`;
         messageInput.focus();
@@ -125,7 +61,7 @@ async function loadRealExamples() {
     });
     byId('real-examples').replaceChildren(...buttons);
     byId('example-note').textContent =
-      'These are dataset labels, not expected agent verdicts. The suspected scam example includes a repository URL added for simulation; it was not in the original message. Use a new conversation to compare examples independently.';
+      'Labels come from your LinkedIn collection. The suspected scam example uses a repository URL added for the simulation. Start a new conversation to compare cases.';
   } catch {
     byId('example-note').textContent =
       'Examples could not be loaded. Refresh the page, or type your own recruiter message.';
@@ -146,7 +82,6 @@ document.querySelectorAll('[data-starter]').forEach((button) => {
   button.addEventListener('click', () => {
     messageInput.value = starters[button.dataset.starter];
     senderInput.value = 'recruiter';
-    updateSuggestions();
     messageInput.focus();
   });
 });
@@ -180,20 +115,75 @@ function appendMessage(message) {
   scrollThread();
 }
 
-function decisionTitle(step) {
-  if (step.action === 'FLAG') return 'Stop this request.';
-  if (step.action === 'SAFE') return 'Continue the conversation.';
-  if (step.inspection_triggered) return 'Checking the repository.';
-  if (step.scope === 'wallet_approval') return 'Keep your wallet disconnected.';
-  return 'Pause and verify.';
+function beliefBar(label, scam) {
+  const percent = (value) => `${(value * 100).toFixed(1)}%`;
+  const row = element('div', '', 'belief-row');
+  const track = element('div', '', 'belief-track');
+  const fill = element('span', '', 'belief-fill');
+  fill.style.width = percent(scam);
+  track.setAttribute('aria-hidden', 'true');
+  track.append(fill);
+  row.append(
+    element('strong', label),
+    track,
+    element('span', `Scam ${percent(scam)}`, 'belief-scam'),
+    element('span', `Legitimate ${percent(1 - scam)}`, 'belief-legitimate'),
+  );
+  return row;
+}
+
+function showReasoning(step) {
+  const reasoning = step.reasoning;
+  if (!reasoning) return;
+  byId('reasoning-panel').hidden = false;
+  byId('reasoning-values').hidden = false;
+  const status = reasoning.updateStatus;
+  const unsupported = status === 'unsupported_evidence' || status === 'unmodelled_evidence';
+  byId('reasoning-status').textContent = unsupported
+    ? 'The model could not update from this evidence.'
+    : reasoning.unmodelledEvidenceEventIds.length
+      ? 'Some evidence falls outside this estimate.'
+      : '';
+  byId('belief-bars').replaceChildren(
+    beliefBar('Before this step (prior)', reasoning.priorScam),
+    beliefBar(
+      reasoning.lastUpdatedAtEvent ? 'After this step (posterior)' : 'Current estimate',
+      reasoning.distribution.scam,
+    ),
+  );
+  const metrics = [
+    ['Current entropy', reasoning.entropyBits],
+    ['Observed information gain', reasoning.observedGainBits],
+    ['Expected inspection gain', reasoning.expectedInspectionGainBits],
+  ];
+  byId('information-metrics').replaceChildren(
+    ...metrics.flatMap(([label, value]) => [
+      element('dt', label),
+      element('dd', value === null ? '—' : `${value.toFixed(3)} bits`),
+    ]),
+  );
+  const costs = Object.entries(reasoning.expectedCosts);
+  const max = Math.max(...costs.map(([, cost]) => cost));
+  byId('cost-bars').replaceChildren(
+    ...costs.map(([action, cost]) => {
+      const row = element('div', '', 'cost-row');
+      const meter = element('meter');
+      meter.max = max || 1;
+      meter.value = cost;
+      meter.setAttribute('aria-label', `${action} expected cost`);
+      row.dataset.lowest = String(action === reasoning.costAction);
+      row.append(element('span', action), meter, element('span', cost.toFixed(3)));
+      return row;
+    }),
+  );
+  const costChoice = byId('cost-choice');
+  costChoice.hidden = reasoning.costAction === step.action;
+  costChoice.textContent =
+    `Lowest modelled cost: ${reasoning.costAction}. Live guidance: ${step.action}.`;
 }
 
 function showDecision(step) {
   if (step.candidate_recorded) {
-    updateAgentFlow(
-      'context',
-      'Reply saved for the next recruiter turn. Analysis and inspection were skipped.',
-    );
     const note = element('article', '', 'agent-response');
     note.append(
       element('strong', 'Reply recorded'),
@@ -209,19 +199,10 @@ function showDecision(step) {
   if (!['SAFE', 'HOLD', 'FLAG'].includes(step.action) || typeof step.reason !== 'string') {
     throw new Error('Unexpected assessment. Start a new conversation.');
   }
-  if (step.inspection_triggered) {
-    flowInspected = true;
-    updateAgentFlow(
-      'inspecting',
-      'Repository inspection started. Execution remains on hold while the result is pending.',
-    );
-  } else {
-    flowInspectionReturned = Boolean(step.inspection);
-    updateAgentFlow(
-      'complete',
-      `${step.action} guidance returned. Read its scope and evidence below.`,
-    );
-  }
+  showReasoning(step);
+  byId('agent-loading-label').textContent = step.inspection_triggered
+    ? 'Inspecting repository source…'
+    : 'Finishing assessment…';
   const labels = {
     SAFE: 'Continue chatting',
     HOLD: 'Verification needed',
@@ -240,11 +221,6 @@ function showDecision(step) {
   const heading = element('div', '', 'response-label');
   heading.append(element('strong', 'IntentChain'), element('small', labels[step.action]));
   response.replaceChildren(heading, element('p', body));
-  byId('verdict').className = `verdict ${step.action}`;
-  byId('action-label').textContent =
-    `${step.action} · ${step.scope === 'wallet_approval' ? 'Wallet permission' : step.scope === 'repository_execution' ? 'Repository execution' : 'Conversation only'}`;
-  byId('verdict-title').textContent = decisionTitle(step);
-  byId('verdict-body').textContent = body;
   const wallet = step.wallet_annotation;
   const execution = step.annotation;
   const quote =
@@ -255,7 +231,6 @@ function showDecision(step) {
         : null;
   byId('evidence-section').hidden = !quote;
   byId('evidence').textContent = quote || '';
-  byId('details').textContent = JSON.stringify(step, null, 2);
   byId('status').textContent = step.inspection_triggered
     ? 'Reading repository source. Keep execution on hold…'
     : 'Assessment received.';
@@ -274,6 +249,10 @@ function setBusy(value) {
       : 'Analysing…'
     : 'Send message ↗';
   composer.setAttribute('aria-busy', String(value));
+  const analysing = value && senderInput.value === 'recruiter';
+  composer.dataset.analysing = String(analysing);
+  byId('agent-loading').hidden = !analysing;
+  byId('agent-loading-label').textContent = analysing ? 'Reading the conversation…' : '';
 }
 
 messageInput.addEventListener('keydown', (event) => {
@@ -288,14 +267,12 @@ composer.addEventListener('submit', async (event) => {
   const text = messageInput.value.trim();
   if (!text || busy || needsReset || messages.length >= 20) return;
   setBusy(true);
-  flowInspected = false;
-  flowInspectionReturned = false;
-  updateAgentFlow(
-    'sending',
-    senderInput.value === 'candidate'
-      ? 'Saving a candidate reply as context; no model analysis will run.'
-      : 'Sending the recruiter message to the local agent.',
-  );
+  if (senderInput.value === 'recruiter') {
+    byId('reasoning-panel').hidden = false;
+    byId('reasoning-status').textContent = byId('reasoning-values').hidden
+      ? 'Waiting for the first assessment.'
+      : 'Analysing the new message. Showing the last calculation.';
+  }
   byId('status').textContent =
     senderInput.value === 'candidate'
       ? 'Saving the candidate reply as context…'
@@ -330,12 +307,6 @@ composer.addEventListener('submit', async (event) => {
         const item = JSON.parse(line);
         events = [...events, item];
         if (item.type === 'started') {
-          updateAgentFlow(
-            item.message.sender === 'candidate' ? 'sending' : 'assessing',
-            item.message.sender === 'candidate'
-              ? 'Recording context without running model analysis.'
-              : 'Assessing the visible request and conversation context.',
-          );
           sessionId = item.session_id;
           messages = [...messages, item.message];
           appendMessage(item.message);
@@ -354,10 +325,11 @@ composer.addEventListener('submit', async (event) => {
         ? 'Conversation limit reached. Start a new conversation to test more messages.'
         : 'Ready for the next message. Previous context is retained.';
   } catch (error) {
-    updateAgentFlow(
-      'error',
-      'Analysis could not finish. No additional action is authorised. Check the chat status for the next step.',
-    );
+    if (!byId('reasoning-panel').hidden) {
+      byId('reasoning-status').textContent = byId('reasoning-values').hidden
+        ? 'No calculation is available for this message.'
+        : 'Analysis stopped. Showing the last available calculation.';
+    }
     if (accepted) needsReset = true;
     byId('status').textContent =
       `${error.message || 'Unable to analyse this message.'}${needsReset ? ' Choose New conversation to continue.' : ''}`;
@@ -392,21 +364,15 @@ resetButton.addEventListener('click', async () => {
   events = [];
   responses = {};
   needsReset = false;
-  flowInspected = false;
-  flowInspectionReturned = false;
-  updateAgentFlow('idle', 'Activity will appear here when you send a message.');
+  byId('reasoning-panel').hidden = true;
+  byId('reasoning-values').hidden = true;
+  byId('reasoning-status').textContent = 'Waiting for the first assessment.';
   byId('thread')
     .querySelectorAll('.message-row, .agent-response')
     .forEach((node) => node.remove());
   byId('welcome').hidden = false;
   byId('count').textContent = '0 of 20 messages';
-  byId('verdict').className = 'verdict neutral';
-  byId('action-label').textContent = 'Awaiting a message';
-  byId('verdict-title').textContent = 'Context comes first.';
-  byId('verdict-body').textContent = 'Type a recruiter message to begin a fresh conversation.';
   byId('evidence-section').hidden = true;
-  byId('details').textContent = 'Send a message to see the source-backed decision.';
-  byId('technical-details').open = false;
   byId('download').disabled = true;
   byId('status').textContent = 'New conversation. Previous context has been cleared.';
   messageInput.value = '';

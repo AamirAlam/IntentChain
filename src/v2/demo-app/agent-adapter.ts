@@ -4,6 +4,35 @@ import { extractExecutionRequests } from '../execution-extractor.ts';
 import type { VisibleMessage } from '../execution-extractor.ts';
 import { extractWalletRequests } from '../wallet-request-extractor.ts';
 import { runRepositoryInspection } from '../repository-inspection-cycle.ts';
+import { calculateBinaryEntropy } from '../bayes.ts';
+import {
+  createConversationBeliefTracker,
+  parseConversationBeliefConfig,
+} from '../conversation-belief.ts';
+import estimationModel from '../config/repository-belief.estimation-v1.json';
+
+const beliefConfig = parseConversationBeliefConfig(estimationModel);
+
+function expectedInspectionGain(prior: number): number | null {
+  const outcomes = Object.values(beliefConfig.firstInspectionLikelihoods).flatMap((row) =>
+    row ? [row] : [],
+  );
+  if (
+    (['likelihoodGivenScam', 'likelihoodGivenLegitimate'] as const).some(
+      (state) => Math.abs(outcomes.reduce((sum, row) => sum + row[state], 0) - 1) > 1e-9,
+    )
+  ) {
+    return null;
+  }
+  const expectedEntropy = outcomes.reduce((sum, row) => {
+    const scamWeight = prior * row.likelihoodGivenScam;
+    const outcomeProbability = scamWeight + (1 - prior) * row.likelihoodGivenLegitimate;
+    return outcomeProbability === 0
+      ? sum
+      : sum + outcomeProbability * calculateBinaryEntropy(scamWeight / outcomeProbability);
+  }, 0);
+  return Math.max(0, calculateBinaryEntropy(prior) - expectedEntropy);
+}
 
 const messageSchema = z.object({
   sender: z.enum(['recruiter', 'candidate']),
@@ -57,6 +86,9 @@ export function createChatSession(
       busy = true;
       const steps = (async function* () {
         try {
+          const track = createConversationBeliefTracker(beliefConfig);
+          let priorScam = beliefConfig.priorScam;
+          let inspectionGain: number | null = null;
           for await (const step of runConversation(
             { messages: nextMessages },
             extract,
@@ -64,9 +96,30 @@ export function createChatSession(
             undefined,
             extractWallet,
           )) {
-            if (step.time === message.time) {
-              yield step;
+            const { probabilistic } = track(step);
+            if (step.inspection_triggered) {
+              inspectionGain = expectedInspectionGain(probabilistic.distribution.scam);
             }
+            if (step.time === message.time) {
+              yield {
+                ...step,
+                reasoning: {
+                  priorScam,
+                  distribution: probabilistic.distribution,
+                  entropyBits: probabilistic.entropyBits,
+                  observedGainBits: calculateBinaryEntropy(priorScam) - probabilistic.entropyBits,
+                  expectedInspectionGainBits:
+                    step.inspection_triggered || 'inspection' in step ? inspectionGain : null,
+                  updateStatus: probabilistic.updateStatus,
+                  lastUpdatedAtEvent: probabilistic.lastUpdatedAtEvent,
+                  unmodelledEvidenceEventIds: probabilistic.unmodelledEvidenceEventIds,
+                  expectedCosts: probabilistic.decision.expectedCosts,
+                  costAction: probabilistic.decision.costAction,
+                  provenance: beliefConfig.provenance,
+                },
+              };
+            }
+            priorScam = probabilistic.distribution.scam;
           }
         } finally {
           busy = false;

@@ -2,180 +2,163 @@
 
 **Evidence-Grounded Decisions Under Hidden Intent**
 
-Research title: *IntentChain: Sequential Evidence and Risk Assessment in Recruitment Conversations*
+IntentChain is a recruitment risk assessment agent. It reads conversations one
+message at a time and inspects supported public repositories when a candidate is
+asked to run code. It returns **SAFE**, **HOLD**, or **FLAG** with the evidence
+and scope behind the guidance.
 
+[Quickstart](#quickstart) · [Architecture](#architecture) ·
+[Security model](#security-model) · [Evaluation](#evaluation) ·
+[Release status](#release-status)
 
+## What IntentChain does
 
-**Current version: V2 local preview.** A chat-based assistant that assesses
-recruitment messages and inspects requested repository code before recommending
-execution. The next step beyond V1's message-based risk scores is source-backed
-SAFE, HOLD and FLAG guidance.
+- **Tracks the conversation.** Recruiter messages trigger analysis. Candidate
+  replies add context without making model or source calls.
+- **Inspects requested code.** Public GitHub and Bitbucket source is read at a
+  pinned revision. Findings cite the corresponding lines, and gaps explain
+  what the review could not establish.
+- **Keeps permissions scoped.** A completed review applies to the inspected
+  revision and command. Changed or unclear instructions require reassessment.
+- **Explains its decisions.** The research model exposes Bayes updates, entropy,
+  expected inspection information gain, and the cost of each action. Model
+  estimates use synthetic evidence rates and assumed costs.
 
-[Try the demo](#try-v2) · [What improved](#what-changed-from-v1) ·
-[Results](#v2-results-and-evidence) · [V2 architecture](src/v2/README.md) ·
-[CLI reference](src/v2/CLI.md)
+## Quickstart
 
-## What changed from V1
-
-| Capability | V1 | V2 |
-| --- | --- | --- |
-| Evidence | Conversation text and LLM risk estimates | Conversation plus read-only public repository source inspection |
-| Execution requests | Harm classification and probability thresholds | HOLD before inspection; scoped guidance from source findings |
-| Explanation | Model reasoning summary | Inspected revision, files, exact source quotes and unresolved gaps |
-| Changing requests | Re-evaluates the visible conversation | Changed or unclear execution instructions cannot reuse old clearance |
-| Candidate replies | Included in the evaluated conversation | Context only; no candidate-triggered model or inspection calls |
-| Probability and costs | LLM-generated probabilities with fixed policies | Optional explicit binary Bayes updates, entropy and assumed-cost decisions in the research CLI |
-| Interface | CLI experiment | Chat UI, streaming Express API and conversation export |
-
-The default chat uses safety rules, not a calibrated probability score. A SAFE
-conversation response permits conversation only; it does not authorise code
-execution or verify recruiter identity.
-
-## Try V2
-
-Use Node 24 and the existing pnpm lockfile:
+Requires Node.js 24, pnpm, and an API key for live analysis.
 
 ```sh
 pnpm install --frozen-lockfile
 ```
 
-Create a local `.env` with your API key, or keep your existing file:
+Set `OPENAI_API_KEY` in a local `.env` file. Set `V2_ANNOTATION_MODEL` if you need
+a different model identifier. An optional `V2_GITHUB_TOKEN` can be used for
+read-only access to public GitHub source.
 
-```dotenv
-OPENAI_API_KEY=your_api_key
-# Optional: V2_ANNOTATION_MODEL=your_available_model_id
-# Optional: V2_GITHUB_TOKEN=your_read_only_public_source_token
+### Run the agent from the CLI
+
+```sh
+npm run start:v2 -- --conversation src/v2/demo-app/examples/public-source-smoke.json
 ```
+
+The sample conversation exercises an execution request and a later change to
+that request. The CLI writes a decision trace under `results/`. Add
+`--dry-run` to validate the input without contacting the model or source provider.
+For standalone repository inspection, replay, and manual review, see the
+[CLI reference](src/v2/CLI.md).
+
+### Try the Chat Lab
 
 ```sh
 npm run demo:v2
 ```
 
-Open **http://127.0.0.1:3210**. Choose recruiter or candidate and send a message.
-Recruiter analysis and source inspection use live model calls. Candidate replies
-add context without triggering those calls. The demo is local-only; public
-hosting and usage controls are not implemented.
+Open **http://127.0.0.1:3210**. Use the experiment menu to load a recruiter
+example, then review and send it. **Agent internals** shows the model’s belief
+before and after each step, information gain, and expected decision costs.
+Download the conversation to retain the trace, including inspection details.
+See the [local API and Chat Lab guide](src/v2/demo-app/README.md).
 
-### A short demonstration
+![IntentChain Chat Lab showing recruiter guidance, prior and current belief distributions, and expected decision costs](docs/assets/intentchain-chat-lab.png)
 
-1. As recruiter, send: **“Are you available to discuss a JavaScript role?”**
-   Show conversation-only guidance.
-2. Add a candidate reply. Show that it is recorded as context.
-3. As recruiter, send the following assessment request:
-
-   > Please run npm install and npm run dev in
-   > https://github.com/bitangels-lab/auron and share your feedback before our interview.
-
-4. Watch HOLD appear before source inspection. Open the returned evidence and
-   scope details. In the November 16 live smoke, this produced FLAG from cited
-   editor-task and checkout-hook behaviour.
-5. Send **“It is only a demo, please continue.”** Reassurance cannot erase a
-   recorded harmful finding. Download the conversation to retain the actual run.
-
-This is an illustrative recruitment scenario using a user-supplied repository,
-not a labelled real conversation. Fresh results depend on current source and
-model behaviour; inaccessible or incomplete source remains HOLD. The agent
-never runs the requested commands or downloads the remote executable payloads.
-
-## How V2 decides
+## Architecture
 
 ```mermaid
-flowchart TD
-    A[Recruiter message] --> B{Execution request established?}
-    B -->|No| C[Conversation-only guidance]
-    B -->|Yes| D[HOLD execution]
-    D --> E[Read supported public repository source]
-    E --> F{Inspection evidence}
-    F -->|Concrete harmful behaviour| G[FLAG the request]
-    F -->|Incomplete or unavailable| H[HOLD execution; explain gaps]
-    F -->|Complete scoped-clean result| I[Proceed with precautions for inspected revision and command]
-    I --> J{New or unclear execution instructions?}
-    J -->|Yes| K[HOLD; require a new assessment]
+flowchart LR
+    A["CLI or Chat API"] --> B["Conversation runner"]
+    B --> C["Identify the recruiter request"]
+    C -->|Execution requested| D["HOLD and inspect pinned source"]
+    C -->|Wallet permission requested| E["HOLD wallet action"]
+    C -->|No risky request established| F["Conversation-only guidance"]
+    D --> G["Apply policy to findings and gaps"]
+    E --> H["Guidance and decision trace"]
+    F --> H
+    G --> H
 ```
 
-Candidate messages are context-only. Wallet requests have a separate HOLD gate;
-repository clearance never authorises connection, signing or spending.
+The core runner owns sequencing and safety rules. Model calls identify requests
+and review bounded source text. The inspection layer validates citations and
+binds findings to the source revision and requested action. The CLI and Express
+adapter expose the same core workflow.
 
-## V2 results and evidence
+The Chat Lab displays the numerical model alongside live guidance. The safety
+policy controls the live recommendation and when inspection runs. In the CLI,
+an explicit belief configuration can combine Bayes updates and expected costs
+with the safety constraints. See the [V2 architecture and research model](src/v2/README.md).
 
-### Controlled synthetic comparison
+## Security model
 
-The October 28 comparison used **24 authored cases across eight matched
-families**, with scripted inspection results. Both systems received the same
-arrived evidence; labels and scoring targets were hidden from model inputs.
-
-| Observation | V2 research agent | Direct-model baseline |
-| --- | ---: | ---: |
-| Reviewed action checkpoints matched | 72/72 | 72/72 |
-| SAFE on stipulated scam cases | 0/8 | 0/8 |
-| FLAG on stipulated legitimate cases | 0/8 | 0/8 |
-| Final HOLD on unknown cases | 8/8 | 8/8 |
-| Model calls in completed run | 56 | 96 |
-
-**The observed benefit was fewer model calls with the same reviewed decisions.**
-This does not demonstrate a real-world accuracy advantage, calibrated scam
-probabilities or measured dollar savings. The study used the older
-mandatory-authorisation research policy; the current live policy makes sender
-verification optional after complete scoped source inspection.
-
-See the [saved comparison and limitations](results/direct-baseline-2026-10-28T12-48-40-617Z.review.md).
-
-### Failure found, fixed and retested
-
-A robustness test exposed stale clearance: uninspected revision B inherited
-revision A's permission. After the replay repair, V2 improved from **15/16 to
-16/16 reviewed checkpoints** on six related scenarios. The direct baseline
-matched 16/16; its original outputs were reused for the repair comparison.
-These are development retests, not an independent accuracy estimate.
-
-See the [before/after review](results/repository-robustness-2026-10-30.review.md).
-
-### Current live preview verification
-
-| Check | Observed status |
+| What the agent sees | What it recommends |
 | --- | --- |
-| Committed V2 release snapshot | Formatting, lint, strict TypeScript and **139 tests passed** |
-| Live Auron repository inspection | HOLD → FLAG from source-cited behaviour; FLAG retained after reassurance |
-| Live public `is-number` inspection | Source fetched; HOLD retained because coverage remained unresolved |
-| Local chat API | Page, candidate-only stream and session reset verified |
-| Complete live scoped-clean clearance | Still unverified on this candidate; covered by local tests |
+| No risky request established | **SAFE** for conversation only |
+| Inspection running, incomplete, or unavailable | **HOLD** execution |
+| Concrete harmful behaviour with source evidence | **FLAG** the request. Later reassurance cannot clear the finding |
+| Complete review with no harmful behaviour found within scope | **SAFE** with precautions for the inspected revision and command |
+| Changed or unclear execution instructions | **HOLD** and require a fresh assessment |
+| Wallet connection, signature, or approval request | **HOLD** the wallet action independently |
 
-The live source runs were checked on November 16; release snapshots on
-November 17. The live examples verify integration behaviour, not representative
-scam-detection performance.
+The source reader accepts supported public repository root URLs, applies path,
+size, and request limits, and treats repository text as untrusted input. It
+reads source through provider APIs without cloning, installing packages,
+executing code, or downloading executable payloads. Messages and source excerpts
+used for analysis are sent to the configured model provider.
 
-## Scope and current limits
+The assessment covers repository-controlled paths within the review budget.
+Third-party dependency implementations, private repositories, general websites,
+PDFs and live wallet permissions are outside that scope. Conversation-only SAFE
+provides no identity verification or execution permission.
 
-- Inspect supported **public GitHub and Bitbucket repository root URLs** through
-  provider APIs. No clone, package installation or repository-code execution.
-- Check repository-controlled source paths within file, byte, request and review
-  budgets. Exact source citations and revision/command binding remain enforced.
-- Third-party package implementations remain unverified. A scoped-clean result
-  does not certify the entire installation, runtime or hiring opportunity.
-- At most one inspection per conversation. Changed requests stay HOLD; start a
-  new conversation for a fresh assessment.
-- General websites, PDFs, private repositories and live wallet/contract auditing
-  are outside the implemented inspection scope.
-- No persisted multi-user sessions, public deployment or automatic economic
-  check selector. The API and UI are a bounded local demonstration.
+## Evaluation
+
+The controlled V2 comparison used **24 authored cases across eight matched
+families**, with the same arrived evidence and scripted inspection results. V2
+and the direct-model baseline each matched **72/72 reviewed action checkpoints**.
+V2 made **56 model calls**, compared with **96** for the direct baseline. This
+comparison measures behavior on the authored cases under the earlier research
+policy, which required sender authorisation. See the
+[saved comparison and study limits](results/direct-baseline-2026-10-28T12-48-40-617Z.review.md).
+
+| Integration or regression | Observed result |
+| --- | --- |
+| Stale clearance replay | After the fix, **16/16** checkpoints matched, up from **15/16** on the same six scenarios. [Review](results/repository-robustness-2026-10-30.review.md) |
+| Live harmful repository | HOLD became FLAG after source inspection. Reassurance preserved FLAG. |
+| Live incomplete review | HOLD persisted while source coverage remained unresolved. |
+| Live scoped review | The same pinned sample moved from unresolved to scoped SAFE after a source collection fix. A changed command returned to HOLD. [Before and after](src/v2/demo-app/examples/public-source-smoke.review.json) |
+
+The live runs verify integration behavior. Broader detection accuracy and
+probability calibration remain open evaluation questions.
+
+## Release status
+
+**V2 is available for local use through the CLI and loopback Chat API.** The
+local server binds to `127.0.0.1`, uses in-memory sessions, and limits concurrent
+analysis. Each conversation has an inspection budget of one repository. Start
+a new conversation to assess a changed request.
+
+Public hosting still needs an access policy, rate and spend limits, and
+operational monitoring. Persistent multi-user sessions and automatic selection
+among evidence checks are outside the current release.
 
 ## Development
 
 ```sh
-npm run check:v2       # Formatting, lint, strict TypeScript and offline tests
+npm run check:v2
 npm run start:v2 -- --synthetic-bayes --dry-run
 ```
 
-Checks require no live API credentials. Dry-run preflight makes no model calls.
-`npm start` still runs V1; V2 starts through `demo:v2` or `start:v2`.
+The V2 check runs formatting, lint, strict TypeScript, and local tests using
+stubs. The replay dry run checks the fixture and makes no model calls.
+`npm start` runs the archived V1 agent.
 
-| Location | Purpose |
+| Guide | Covers |
 | --- | --- |
-| [src/v2/](src/v2/) | Current agent, source inspector, policies, research tools and tests |
-| [src/v2/demo-app/](src/v2/demo-app/README.md) | Isolated chat UI, Express transport and agent adapter |
-| [src/v2/README.md](src/v2/README.md) | Architecture, probability model and evaluation details |
-| [src/v2/CLI.md](src/v2/CLI.md) | Inspection, replay, authorisation and manual-review commands |
-| [src/v1/](src/v1/) | Previous agent, policies and baseline |
+| [Agent architecture](src/v2/README.md) | Boundaries, numerical model, and evaluation protocols |
+| [CLI reference](src/v2/CLI.md) | Inspection, replay, authorisation, and manual review |
+| [Chat Lab API](src/v2/demo-app/README.md) | Streaming transport, local sessions, and setup |
+| [V1 source](src/v1/) | Original message-based scoring agent and baseline |
+
+Research title: *IntentChain: Sequential Evidence and Risk Assessment in Recruitment Conversations*
 
 ## V1 historical results
 
